@@ -6,7 +6,7 @@ function Home() {
           <div className="hero-content">
             <h1>Welcome to <span>Roadex</span></h1>
             <p>Best car rental service at the best prices</p>
-            <a href="/cars" className="btn-primary">Explore Our Cars</a>
+            <a href="/cars" className="btn-primary">Explore Our Vehicles</a>
           </div>
         </div>
       </div>
