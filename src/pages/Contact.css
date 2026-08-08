@@ -40,7 +40,7 @@
 }
 
 .contact-form {
-  width: min(100%, 460px);
+  width: min(100%, 560px);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -56,7 +56,9 @@
   color: inherit;
 }
 
-.contact-form input {
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
   width: 100%;
   padding: 12px 14px;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -64,9 +66,12 @@
   font-size: 16px;
   outline: none;
   box-sizing: border-box;
+  font-family: inherit;
 }
 
-.contact-form input:focus {
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
   border-color: #d4af37;
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
 }
@@ -79,6 +84,20 @@
   color: #000;
   font-weight: 700;
   cursor: pointer;
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  font-size: 14px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .form-message {
@@ -103,5 +122,10 @@
 
   .contact-form {
     padding: 16px;
+    width: 100%;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 }
