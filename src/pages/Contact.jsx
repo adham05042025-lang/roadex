@@ -4,6 +4,23 @@ import './Contact.css';
 
 function Contact() {
   const [isLight, setIsLight] = useState(false);
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    if (!email.trim()) {
+      setMessage('Please enter your email address.');
+      return;
+    }
+
+    const subject = encodeURIComponent('Roadex Inquiry');
+    const body = encodeURIComponent(`Hello Roadex,\n\nI would like to contact you.\nEmail: ${email}`);
+
+    window.location.href = `mailto:info@roadex-eg.com?subject=${subject}&body=${body}`;
+    setMessage('Your email app should open now.');
+  };
 
   return (
     <div className={`contact-page ${isLight ? 'light' : 'dark'}`}>
@@ -26,7 +43,7 @@ function Contact() {
       </h2>
 
       <div className="quick-icons">
-        <a href="https://wa.me/+201505516072 " target="_blank" rel="noopener noreferrer">
+        <a href="https://wa.me/+201505516072" target="_blank" rel="noopener noreferrer">
           <FaWhatsapp size={40} color="#25D366" />
         </a>
         <a href="tel:+201505516072">
@@ -42,6 +59,29 @@ function Contact() {
           <FaFacebook size={40} color="#1877F2" />
         </a>
       </div>
+
+      <form className="contact-form" onSubmit={handleSubmit}>
+        <label htmlFor="contact-email" className="form-label">
+          Email Address
+        </label>
+        <input
+          id="contact-email"
+          name="email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          placeholder="Enter your email"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            if (message) setMessage('');
+          }}
+          required
+        />
+        <button type="submit">Send</button>
+      </form>
+
+      {message ? <p className="form-message">{message}</p> : null}
     </div>
   );
 }

@@ -1,15 +1,19 @@
 .contact-page {
-  padding: 40px 20px;
+  padding: 40px 20px 60px;
   max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 
 .contact-page h2 {
   font-size: 36px;
   color: #1a1a2e;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
 }
 
 .quick-icons {
@@ -35,13 +39,69 @@
   background: rgba(0, 0, 0, 0.05);
 }
 
+.contact-form {
+  width: min(100%, 460px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.form-label {
+  font-weight: 600;
+  text-align: left;
+  color: inherit;
+}
+
+.contact-form input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.contact-form input:focus {
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+}
+
+.contact-form button {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #8b6b00 0%, #d4af37 50%, #ffd700 100%);
+  color: #000;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.form-message {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #f8e58c;
+}
+
 @media (max-width: 768px) {
+  .contact-page {
+    padding-inline: 16px;
+  }
+
   .quick-icons {
     gap: 20px;
   }
-  
+
   .quick-icons a svg {
     width: 32px !important;
     height: 32px !important;
+  }
+
+  .contact-form {
+    padding: 16px;
   }
 }
