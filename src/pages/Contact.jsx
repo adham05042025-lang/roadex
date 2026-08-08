@@ -32,7 +32,7 @@ function Contact() {
         <a href="tel:+201505516072">
           <FaPhone size={40} color="#007bff" />
         </a>
-        <a href="mailto:info@kayancarrent.com">
+        <a href="mailto:info@roadex-eg.com">
           <FaEnvelope size={40} color="#ea4335" />
         </a>
         <a href="https://instagram.com" target="_blank" rel="noopener noreferrer">
