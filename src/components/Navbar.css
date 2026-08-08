@@ -8,7 +8,7 @@
   width: 100%;
   z-index: 1000;
   box-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .nav-container {
@@ -19,6 +19,7 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  position: relative;
 }
 
 .logo a {
@@ -100,14 +101,16 @@
     flex-direction: column;
     background: #000000;
     position: absolute;
-    top: 62px;
+    top: calc(100% + 10px);
     left: 0;
     right: 0;
-    padding: 20px;
-    gap: 15px;
+    padding: 20px 16px;
+    gap: 12px;
     text-align: center;
     border-top: 1px solid #333;
     width: 100%;
+    z-index: 1001;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
   }
 
   .nav-links.open {
@@ -115,7 +118,7 @@
   }
 
   .nav-links a {
-    font-size: 18px;
+    font-size: 16px;
     padding: 10px;
   }
 }
