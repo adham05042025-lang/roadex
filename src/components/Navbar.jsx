@@ -19,12 +19,13 @@ function Navbar() {
     <nav className="navbar">
       <div className="nav-container">
        <div className="logo">
-       <img src="/logo.png" alt="ROADEX" />
-          <Link to="/" onClick={() => setMenuOpen(false)}>
-            Roadex <span>Car Rent</span>
-          </Link>
-        </div>
-
+  <Link to="/" onClick={() => setMenuOpen(false)}>
+    <img src="/logo.png" alt="Roadex" />
+    <span className="logo-text">
+      Roadex <span>Car Rent</span>
+    </span>
+  </Link>
+</div>
         <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
           {links.map((link) => (
             <Link
