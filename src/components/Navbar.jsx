@@ -18,7 +18,8 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="nav-container">
-        <div className="logo">
+       <div className="logo">
+       <img src="/logo.png" alt="ROADEX" />
           <Link to="/" onClick={() => setMenuOpen(false)}>
             Roadex <span>Car Rent</span>
           </Link>
