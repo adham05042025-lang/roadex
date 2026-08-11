@@ -1,0 +1,41 @@
+.admin-charts {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.admin-chart-card {
+  background: #111;
+  border: 1px solid #292929;
+  border-radius: 16px;
+  padding: 22px;
+}
+
+.admin-chart-card h2 {
+  color: #fff;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.admin-chart-card:last-child {
+  grid-column: 1 / -1;
+}
+
+.recharts-cartesian-axis-tick-value {
+  fill: #aaa;
+}
+
+.recharts-text {
+  fill: #aaa;
+}
+
+@media (max-width: 900px) {
+  .admin-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-chart-card:last-child {
+    grid-column: auto;
+  }
+}

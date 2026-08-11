@@ -1,18 +1,72 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../supabase';
 import './Navbar.css';
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const location = useLocation();
 
-  const links = [
-    { to: '/', label: 'Home' },
-    { to: '/cars', label: 'Fleets' },
-    { to: '/booking', label: 'Book Now' },
-    { to: '/contact', label: 'Contact' },
-    { to: '/register', label: 'Register' },
-  ];
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data } = await supabase.auth.getUser();
+
+      const currentUser = data.user;
+      setUser(currentUser);
+
+      if (!currentUser) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUser.id)
+        .single();
+
+      setIsAdmin(profile?.role === 'admin');
+    };
+
+    loadUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+
+        if (!currentUser) {
+          setIsAdmin(false);
+          return;
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+
+        setIsAdmin(profile?.role === 'admin');
+      }
+    );
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+
+    setUser(null);
+    setIsAdmin(false);
+    setMenuOpen(false);
+
+    window.location.href = '/';
+  };
 
   const isActive = (path) => location.pathname === path;
 
@@ -31,16 +85,85 @@ function Navbar() {
         </div>
 
         <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
-          {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={isActive(link.to) ? 'active' : ''}
-              onClick={() => setMenuOpen(false)}
-            >
-              {link.label}
-            </Link>
-          ))}
+
+          <Link
+            to="/"
+            className={isActive('/') ? 'active' : ''}
+            onClick={() => setMenuOpen(false)}
+          >
+            Home
+          </Link>
+
+          <Link
+            to="/cars"
+            className={isActive('/cars') ? 'active' : ''}
+            onClick={() => setMenuOpen(false)}
+          >
+            Fleets
+          </Link>
+
+          <Link
+            to="/booking"
+            className={isActive('/booking') ? 'active' : ''}
+            onClick={() => setMenuOpen(false)}
+          >
+            Book Now
+          </Link>
+
+          <Link
+            to="/contact"
+            className={isActive('/contact') ? 'active' : ''}
+            onClick={() => setMenuOpen(false)}
+          >
+            Contact
+          </Link>
+
+          {!user && (
+            <>
+              <Link
+                to="/register"
+                className={isActive('/register') ? 'active' : ''}
+                onClick={() => setMenuOpen(false)}
+              >
+                Register
+              </Link>
+
+              <Link
+                to="/login"
+                className={isActive('/login') ? 'active' : ''}
+                onClick={() => setMenuOpen(false)}
+              >
+                Login
+              </Link>
+            </>
+          )}
+
+          {user && (
+            <>
+              <Link
+                to="/my-bookings"
+                className={isActive('/my-bookings') ? 'active' : ''}
+                onClick={() => setMenuOpen(false)}
+              >
+                My Bookings
+              </Link>
+
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className={isActive('/admin') ? 'active' : ''}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
+
+              <button type="button" onClick={handleLogout}>
+                Logout
+              </button>
+            </>
+          )}
+
         </div>
 
         <button

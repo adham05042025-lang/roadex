@@ -1,0 +1,121 @@
+.admin-cars-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 50px 20px 70px;
+}
+
+.admin-cars-page h1 {
+  color: #ffd700;
+  margin-bottom: 30px;
+}
+
+.admin-car-form-container,
+.admin-car-list {
+  background: #111;
+  border: 1px solid #2c2c2c;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 30px;
+}
+
+.admin-car-form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+.admin-car-form input,
+.admin-car-form textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #181818;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+.admin-car-form textarea {
+  grid-column: 1 / -1;
+  min-height: 110px;
+  resize: vertical;
+}
+
+.admin-car-form button {
+  padding: 13px;
+  border: 0;
+  border-radius: 8px;
+  background: #ffd700;
+  color: #111;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancel-edit-button {
+  background: #333 !important;
+  color: #fff !important;
+}
+
+.admin-car-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  padding: 18px 0;
+  border-bottom: 1px solid #292929;
+}
+
+.admin-car-card:last-child {
+  border-bottom: 0;
+}
+
+.admin-car-card h3 {
+  margin: 0 0 10px;
+  color: #fff;
+}
+
+.admin-car-card p {
+  color: #aaa;
+  margin: 5px 0;
+}
+
+.admin-car-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-car-actions button {
+  padding: 9px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  border: 1px solid #555;
+  background: #222;
+  color: #fff;
+}
+
+.admin-car-actions button:last-child {
+  color: #ff7676;
+}
+
+@media (max-width: 700px) {
+  .admin-car-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-car-form textarea {
+    grid-column: auto;
+  }
+
+  .admin-car-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .admin-car-actions {
+    width: 100%;
+  }
+
+  .admin-car-actions button {
+    flex: 1;
+  }
+}

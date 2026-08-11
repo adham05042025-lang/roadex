@@ -1,0 +1,107 @@
+.admin-users-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 50px 20px 70px;
+}
+
+.admin-users-header {
+  margin-bottom: 30px;
+}
+
+.admin-users-header h1 {
+  margin: 0 0 8px;
+  color: #ffd700;
+  font-size: 36px;
+}
+
+.admin-users-header p {
+  margin: 0;
+  color: #999;
+}
+
+.admin-users-message {
+  margin-bottom: 20px;
+  padding: 12px 15px;
+
+  background: #151515;
+  border: 1px solid #333;
+  border-radius: 8px;
+
+  color: #ddd;
+}
+
+.admin-users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-user-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 25px;
+
+  padding: 22px;
+
+  background: #111;
+  border: 1px solid #292929;
+  border-radius: 14px;
+}
+
+.admin-user-info h2 {
+  margin: 0 0 12px;
+  color: #fff;
+}
+
+.admin-user-info p {
+  margin: 6px 0;
+  color: #aaa;
+}
+
+.admin-user-info strong {
+  color: #ddd;
+}
+
+.user-role {
+  text-transform: capitalize;
+  font-weight: 700;
+}
+
+.user-role.admin {
+  color: #ffd700;
+}
+
+.user-role.user {
+  color: #7db7ff;
+}
+
+.admin-user-actions label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  color: #aaa;
+}
+
+.admin-user-actions select {
+  min-width: 140px;
+  padding: 10px;
+
+  background: #181818;
+  color: #fff;
+
+  border: 1px solid #444;
+  border-radius: 7px;
+}
+
+@media (max-width: 650px) {
+  .admin-user-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-user-actions select {
+    width: 100%;
+  }
+}
