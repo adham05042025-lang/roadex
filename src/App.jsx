@@ -7,6 +7,7 @@ import Booking from './pages/Booking';
 import Contact from './pages/Contact';
 import CarDetails from './pages/CarDetails';
 import './App.css';
+import Register from './pages/Register';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/car/:id" element={<CarDetails />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </main>
       <Footer />

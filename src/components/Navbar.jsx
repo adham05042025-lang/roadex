@@ -11,6 +11,7 @@ function Navbar() {
     { to: '/cars', label: 'Fleets' },
     { to: '/booking', label: 'Book Now' },
     { to: '/contact', label: 'Contact' },
+    { to: '/register', label: 'Register' },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -18,14 +19,17 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="nav-container">
-       <div className="logo">
-  <Link to="/" onClick={() => setMenuOpen(false)}>
-    <img src="/logo.png" alt="Roadex" />
-    <span className="logo-text">
-      Roadex <span>Car Rent</span>
-    </span>
-  </Link>
-</div>
+
+        <div className="logo">
+          <Link to="/" onClick={() => setMenuOpen(false)}>
+            <img src="/logo.png" alt="Roadex" />
+
+            <span className="logo-text">
+              Roadex <span>Car Rent</span>
+            </span>
+          </Link>
+        </div>
+
         <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
           {links.map((link) => (
             <Link
@@ -49,6 +53,7 @@ function Navbar() {
           <span />
           <span />
         </button>
+
       </div>
     </nav>
   );
