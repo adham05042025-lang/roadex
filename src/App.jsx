@@ -17,7 +17,8 @@ import Admin from './pages/Admin';
 import AdminCars from './pages/AdminCars';
 import AdminBookings from './pages/AdminBookings';
 import AdminUsers from './pages/AdminUsers';
-
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import './App.css';
 
 function App() {
@@ -105,6 +106,15 @@ function App() {
               </AdminRoute>
             }
           />
+          <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/reset-password"
+          element={<ResetPassword />}
+        />
 
         </Routes>
 

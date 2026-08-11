@@ -61,7 +61,10 @@ function AdminBookings() {
     setBookings((currentBookings) =>
       currentBookings.map((booking) =>
         booking.id === bookingId
-          ? { ...booking, status: newStatus }
+          ? {
+              ...booking,
+              status: newStatus,
+            }
           : booking
       )
     );
@@ -69,21 +72,30 @@ function AdminBookings() {
     setMessage('Booking updated successfully.');
   };
 
+  const formatDate = (date) => {
+    return new Date(date).toLocaleString();
+  };
+
   return (
     <div className="admin-bookings-page">
 
       <div className="admin-bookings-header">
         <h1>Manage Bookings</h1>
-        <p>View and manage Roadex reservations.</p>
+
+        <p>
+          Review customer reservations and manage their status.
+        </p>
       </div>
 
       {message && (
-        <p className="admin-bookings-message">
+        <div className="admin-bookings-message">
           {message}
-        </p>
+        </div>
       )}
 
-      {loading && <p>Loading bookings...</p>}
+      {loading && (
+        <p>Loading bookings...</p>
+      )}
 
       {!loading && bookings.length === 0 && (
         <p>No bookings found.</p>
@@ -99,84 +111,125 @@ function AdminBookings() {
 
             <div className="admin-booking-info">
 
-              <h2>
-                {booking.cars?.brand}{' '}
-                {booking.cars?.model}
-              </h2>
+              <div className="admin-booking-title">
 
-              <p>
-                <strong>Year:</strong>{' '}
-                {booking.cars?.year}
-              </p>
+                <h2>
+                  {booking.cars?.brand}{' '}
+                  {booking.cars?.model}
+                </h2>
 
-              <p>
-                <strong>Pickup:</strong>{' '}
-                {new Date(
-                  booking.pickup_at
-                ).toLocaleString()}
-              </p>
-
-              <p>
-                <strong>Return:</strong>{' '}
-                {new Date(
-                  booking.return_at
-                ).toLocaleString()}
-              </p>
-
-              <p>
-                <strong>Total:</strong>{' '}
-                {booking.total_price} EGP
-              </p>
-
-              <p>
-                <strong>Status:</strong>{' '}
                 <span
                   className={`booking-status ${booking.status}`}
                 >
                   {booking.status}
                 </span>
-              </p>
+
+              </div>
+
+              <div className="admin-booking-details-grid">
+
+                <div className="booking-detail-box">
+                  <span>Year</span>
+
+                  <strong>
+                    {booking.cars?.year || 'N/A'}
+                  </strong>
+                </div>
+
+                <div className="booking-detail-box">
+                  <span>Total Price</span>
+
+                  <strong>
+                    {Number(
+                      booking.total_price
+                    ).toLocaleString()}{' '}
+                    EGP
+                  </strong>
+                </div>
+
+                <div className="booking-detail-box">
+                  <span>Pickup</span>
+
+                  <strong>
+                    {formatDate(
+                      booking.pickup_at
+                    )}
+                  </strong>
+                </div>
+
+                <div className="booking-detail-box">
+                  <span>Return</span>
+
+                  <strong>
+                    {formatDate(
+                      booking.return_at
+                    )}
+                  </strong>
+                </div>
+
+              </div>
 
             </div>
 
             <div className="admin-booking-actions">
 
-              <button
-                type="button"
-                onClick={() =>
-                  updateStatus(
-                    booking.id,
-                    'confirmed'
-                  )
-                }
-              >
-                Confirm
-              </button>
+              {booking.status === 'pending' && (
+                <button
+                  type="button"
+                  className="accept-booking"
+                  onClick={() =>
+                    updateStatus(
+                      booking.id,
+                      'confirmed'
+                    )
+                  }
+                >
+                  Accept Booking
+                </button>
+              )}
 
-              <button
-                type="button"
-                onClick={() =>
-                  updateStatus(
-                    booking.id,
-                    'completed'
-                  )
-                }
-              >
-                Complete
-              </button>
+              {booking.status === 'confirmed' && (
+                <button
+                  type="button"
+                  className="complete-booking"
+                  onClick={() =>
+                    updateStatus(
+                      booking.id,
+                      'completed'
+                    )
+                  }
+                >
+                  Mark Completed
+                </button>
+              )}
 
-              <button
-                type="button"
-                className="cancel-booking"
-                onClick={() =>
-                  updateStatus(
-                    booking.id,
-                    'cancelled'
-                  )
-                }
-              >
-                Cancel
-              </button>
+              {(booking.status === 'pending' ||
+                booking.status === 'confirmed') && (
+                <button
+                  type="button"
+                  className="refuse-booking"
+                  onClick={() =>
+                    updateStatus(
+                      booking.id,
+                      'cancelled'
+                    )
+                  }
+                >
+                  Refuse Booking
+                </button>
+              )}
+
+              {booking.status === 'completed' && (
+                <div className="booking-final-state">
+                  Rental Completed
+                </div>
+              )}
+
+              {booking.status === 'cancelled' && (
+                <div className="booking-final-state cancelled">
+                  Booking Cancelled
+                </div>
+              )}
 
             </div>
 

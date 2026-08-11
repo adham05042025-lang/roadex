@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../supabase';
+import './Login.css';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -30,42 +32,93 @@ function Login() {
 
   return (
     <div className="login-page">
-      <div className="login-container">
+      <div className="login-card">
 
-        <h1>Login</h1>
-        <p>Login to your Roadex account.</p>
+        <div className="login-header">
+          <h1>Welcome Back</h1>
 
-        <form onSubmit={handleLogin}>
+          <p>
+            Login to your Roadex account to manage your bookings.
+          </p>
+        </div>
 
-          <div>
-            <label>Email</label>
+        <form
+          className="login-form"
+          onSubmit={handleLogin}
+        >
+
+          <div className="login-field">
+            <label htmlFor="login-email">
+              Email Address
+            </label>
+
             <input
+              id="login-email"
               type="email"
               placeholder="Enter your email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) =>
+                setEmail(e.target.value)
+              }
+              autoComplete="email"
               required
             />
           </div>
 
-          <div>
-            <label>Password</label>
+          <div className="login-field">
+            <label htmlFor="login-password">
+              Password
+            </label>
+
             <input
+              id="login-password"
               type="password"
               placeholder="Enter your password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+              autoComplete="current-password"
               required
             />
           </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+          <div className="login-options">
+            <Link
+              to="/forgot-password"
+              className="forgot-password-link"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
+          <button
+            type="submit"
+            className="login-button"
+            disabled={loading}
+          >
+            {loading
+              ? 'Logging in...'
+              : 'Login'}
           </button>
 
         </form>
 
-        {message && <p>{message}</p>}
+        {message && (
+          <div className="login-message">
+            {message}
+          </div>
+        )}
+
+        <div className="login-register">
+          <span>
+            Don't have an account?
+          </span>
+
+          <Link to="/register">
+            Create Account
+          </Link>
+        </div>
 
       </div>
     </div>

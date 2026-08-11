@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import {
   BarChart,
   Bar,
@@ -13,6 +14,7 @@ import {
   LineChart,
   Line,
   CartesianGrid,
+  Legend,
 } from 'recharts';
 
 import { supabase } from '../supabase';
@@ -57,6 +59,7 @@ function Admin() {
     }
 
     await loadDashboardData();
+
     setLoading(false);
   };
 
@@ -68,17 +71,25 @@ function Admin() {
     ] = await Promise.all([
       supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true }),
+        .select('*', {
+          count: 'exact',
+          head: true,
+        }),
 
       supabase
         .from('cars')
-        .select('*', { count: 'exact', head: true }),
+        .select('*', {
+          count: 'exact',
+          head: true,
+        }),
 
       supabase
         .from('bookings')
         .select(`
           id,
           created_at,
+          pickup_at,
+          return_at,
           status,
           total_price,
           cars (
@@ -86,14 +97,19 @@ function Admin() {
             model
           )
         `)
-        .order('created_at', { ascending: true }),
+        .order('created_at', {
+          ascending: true,
+        }),
     ]);
 
-    const bookingRows = bookingsResult.data || [];
+    const bookingRows =
+      bookingsResult.data || [];
 
-    const pendingBookings = bookingRows.filter(
-      (booking) => booking.status === 'pending'
-    ).length;
+    const pendingBookings =
+      bookingRows.filter(
+        (booking) =>
+          booking.status === 'pending'
+      ).length;
 
     const revenue = bookingRows
       .filter(
@@ -103,7 +119,10 @@ function Admin() {
       )
       .reduce(
         (total, booking) =>
-          total + Number(booking.total_price || 0),
+          total +
+          Number(
+            booking.total_price || 0
+          ),
         0
       );
 
@@ -126,7 +145,8 @@ function Admin() {
         booking.created_at
       ).toLocaleDateString();
 
-      grouped[date] = (grouped[date] || 0) + 1;
+      grouped[date] =
+        (grouped[date] || 0) + 1;
     });
 
     return Object.entries(grouped).map(
@@ -146,17 +166,22 @@ function Admin() {
     };
 
     bookings.forEach((booking) => {
-      if (statuses[booking.status] !== undefined) {
+      if (
+        statuses[booking.status] !==
+        undefined
+      ) {
         statuses[booking.status]++;
       }
     });
 
-    return Object.entries(statuses).map(
-      ([status, count]) => ({
+    return Object.entries(statuses)
+      .map(([status, count]) => ({
         status,
         count,
-      })
-    );
+      }))
+      .filter(
+        (item) => item.count > 0
+      );
   }, [bookings]);
 
   const mostBookedCars = useMemo(() => {
@@ -176,14 +201,36 @@ function Admin() {
         car,
         bookings: count,
       }))
-      .sort((a, b) => b.bookings - a.bookings)
+      .sort(
+        (a, b) =>
+          b.bookings - a.bookings
+      )
       .slice(0, 5);
   }, [bookings]);
+
+  const recentBookings = useMemo(() => {
+    return [...bookings]
+      .sort(
+        (a, b) =>
+          new Date(b.created_at) -
+          new Date(a.created_at)
+      )
+      .slice(0, 5);
+  }, [bookings]);
+
+  const pieColors = [
+    '#FFD700',
+    '#65D46E',
+    '#5FA8FF',
+    '#FF6B6B',
+  ];
 
   if (loading) {
     return (
       <div className="admin-page">
-        <p>Loading dashboard...</p>
+        <div className="admin-loading">
+          Loading dashboard...
+        </div>
       </div>
     );
   }
@@ -192,37 +239,63 @@ function Admin() {
     <div className="admin-page">
 
       <div className="admin-header">
-        <h1>Admin Dashboard</h1>
-        <p>Roadex analytics and management.</p>
+
+        <div>
+          <h1>Admin Dashboard</h1>
+
+          <p>
+            Roadex analytics and management.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          className="admin-refresh-button"
+          onClick={loadDashboardData}
+        >
+          Refresh Data
+        </button>
+
       </div>
 
       <div className="admin-stats">
 
         <div className="admin-stat-card">
-          <span>Users</span>
-          <strong>{stats.users}</strong>
-        </div>
-
-        <div className="admin-stat-card">
-          <span>Cars</span>
-          <strong>{stats.cars}</strong>
-        </div>
-
-        <div className="admin-stat-card">
-          <span>Bookings</span>
-          <strong>{stats.bookings}</strong>
-        </div>
-
-        <div className="admin-stat-card">
-          <span>Pending</span>
-          <strong>{stats.pendingBookings}</strong>
-        </div>
-
-        <div className="admin-stat-card">
-          <span>Revenue</span>
+          <span>Total Users</span>
           <strong>
-            {stats.revenue.toLocaleString()} EGP
+            {stats.users}
           </strong>
+        </div>
+
+        <div className="admin-stat-card">
+          <span>Total Cars</span>
+          <strong>
+            {stats.cars}
+          </strong>
+        </div>
+
+        <div className="admin-stat-card">
+          <span>Total Bookings</span>
+          <strong>
+            {stats.bookings}
+          </strong>
+        </div>
+
+        <div className="admin-stat-card">
+          <span>Pending Bookings</span>
+          <strong>
+            {stats.pendingBookings}
+          </strong>
+        </div>
+
+        <div className="admin-stat-card revenue-card">
+          <span>Revenue</span>
+
+          <strong>
+            {stats.revenue.toLocaleString()}
+          </strong>
+
+          <small>EGP</small>
         </div>
 
       </div>
@@ -230,69 +303,220 @@ function Admin() {
       <div className="admin-charts">
 
         <div className="admin-chart-card">
-          <h2>Bookings Over Time</h2>
 
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={bookingsOverTime}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="bookings"
-                stroke="#FFD700"
-                strokeWidth={3}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+          <div className="admin-chart-header">
+            <h2>
+              Bookings Over Time
+            </h2>
 
-        <div className="admin-chart-card">
-          <h2>Most Booked Cars</h2>
+            <span>
+              Booking activity
+            </span>
+          </div>
 
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mostBookedCars}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="car" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar
-                dataKey="bookings"
-                fill="#FFD700"
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        <div className="admin-chart-card">
-          <h2>Booking Status</h2>
-
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={statusData}
-                dataKey="count"
-                nameKey="status"
-                outerRadius={100}
-                label
+          {bookingsOverTime.length > 0 ? (
+            <ResponsiveContainer
+              width="100%"
+              height={260}
+            >
+              <LineChart
+                data={bookingsOverTime}
+                margin={{
+                  top: 10,
+                  right: 20,
+                  left: -15,
+                  bottom: 5,
+                }}
               >
-                {statusData.map((entry, index) => (
-                  <Cell
-                    key={entry.status}
-                    fill={[
-                      '#FFD700',
-                      '#65D46E',
-                      '#5FA8FF',
-                      '#FF6B6B',
-                    ][index]}
-                  />
-                ))}
-              </Pie>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#2b2b2b"
+                />
 
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+                <XAxis
+                  dataKey="date"
+                  tick={{
+                    fill: '#999',
+                    fontSize: 12,
+                  }}
+                />
+
+                <YAxis
+                  allowDecimals={false}
+                  tick={{
+                    fill: '#999',
+                    fontSize: 12,
+                  }}
+                />
+
+                <Tooltip />
+
+                <Line
+                  type="monotone"
+                  dataKey="bookings"
+                  stroke="#FFD700"
+                  strokeWidth={3}
+                  dot={{
+                    fill: '#FFD700',
+                  }}
+                  activeDot={{
+                    r: 6,
+                  }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="chart-empty">
+              No booking data yet.
+            </div>
+          )}
+
+        </div>
+
+        <div className="admin-chart-card">
+
+          <div className="admin-chart-header">
+            <h2>
+              Most Booked Cars
+            </h2>
+
+            <span>
+              Top 5 vehicles
+            </span>
+          </div>
+
+          {mostBookedCars.length > 0 ? (
+            <ResponsiveContainer
+              width="100%"
+              height={260}
+            >
+              <BarChart
+                data={mostBookedCars}
+                margin={{
+                  top: 10,
+                  right: 15,
+                  left: -15,
+                  bottom: 15,
+                }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#2b2b2b"
+                />
+
+                <XAxis
+                  dataKey="car"
+                  tick={{
+                    fill: '#999',
+                    fontSize: 11,
+                  }}
+                />
+
+                <YAxis
+                  allowDecimals={false}
+                  tick={{
+                    fill: '#999',
+                    fontSize: 12,
+                  }}
+                />
+
+                <Tooltip />
+
+                <Bar
+                  dataKey="bookings"
+                  fill="#FFD700"
+                  radius={[
+                    6,
+                    6,
+                    0,
+                    0,
+                  ]}
+                />
+
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="chart-empty">
+              No booking data yet.
+            </div>
+          )}
+
+        </div>
+
+        <div className="admin-chart-card admin-status-chart">
+
+          <div className="admin-chart-header">
+            <h2>
+              Booking Status
+            </h2>
+
+            <span>
+              Current booking distribution
+            </span>
+          </div>
+
+          {statusData.length > 0 ? (
+            <ResponsiveContainer
+              width="100%"
+              height={250}
+            >
+              <PieChart>
+
+                <Pie
+                  data={statusData}
+                  dataKey="count"
+                  nameKey="status"
+                  cx="50%"
+                  cy="45%"
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={3}
+                  labelLine={false}
+                >
+                  {statusData.map(
+                    (entry, index) => (
+                      <Cell
+                        key={entry.status}
+                        fill={
+                          pieColors[
+                            index %
+                              pieColors.length
+                          ]
+                        }
+                      />
+                    )
+                  )}
+                </Pie>
+
+                <Tooltip />
+
+                <Legend
+                  verticalAlign="bottom"
+                  height={35}
+                />
+
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="chart-empty">
+              No booking status data yet.
+            </div>
+          )}
+
+        </div>
+
+      </div>
+
+      <div className="admin-section-title">
+
+        <div>
+          <h2>
+            Management
+          </h2>
+
+          <p>
+            Manage the main Roadex system.
+          </p>
         </div>
 
       </div>
@@ -300,51 +524,162 @@ function Admin() {
       <div className="admin-management">
 
         <div className="admin-management-card">
-          <h2>Cars</h2>
+
+          <div className="management-icon">
+            🚘
+          </div>
+
+          <h2>
+            Cars
+          </h2>
 
           <p>
-            Add, edit, remove cars and manage images.
-          </p>
-
-          <button
-            type="button"
-            onClick={() => navigate('/admin/cars')}
-          >
-            Manage Cars
-          </button>
-        </div>
-
-        <div className="admin-management-card">
-          <h2>Bookings</h2>
-
-          <p>
-            View reservations and change booking status.
+            Add new vehicles, update
+            details, change quantity and
+            manage car images.
           </p>
 
           <button
             type="button"
             onClick={() =>
-              navigate('/admin/bookings')
+              navigate('/admin/cars')
             }
           >
-            Manage Bookings
+            Manage Cars
           </button>
+
         </div>
 
         <div className="admin-management-card">
-          <h2>Users</h2>
+
+          <div className="management-icon">
+            📅
+          </div>
+
+          <h2>
+            Bookings
+          </h2>
 
           <p>
-            View and manage registered users.
+            Review reservations, accept
+            requests, refuse bookings and
+            mark rentals as completed.
           </p>
 
           <button
             type="button"
-            onClick={() => navigate('/admin/users')}
+            onClick={() =>
+              navigate(
+                '/admin/bookings'
+              )
+            }
+          >
+            Manage Bookings
+          </button>
+
+        </div>
+
+        <div className="admin-management-card">
+
+          <div className="management-icon">
+            👤
+          </div>
+
+          <h2>
+            Users
+          </h2>
+
+          <p>
+            View registered customers
+            and manage user roles.
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate('/admin/users')
+            }
           >
             Manage Users
           </button>
+
         </div>
+
+      </div>
+
+      <div className="admin-recent-section">
+
+        <div className="admin-section-title">
+
+          <div>
+            <h2>
+              Recent Bookings
+            </h2>
+
+            <p>
+              Latest booking activity.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="view-all-button"
+            onClick={() =>
+              navigate('/admin/bookings')
+            }
+          >
+            View All
+          </button>
+
+        </div>
+
+        {recentBookings.length === 0 ? (
+          <div className="recent-empty">
+            No bookings yet.
+          </div>
+        ) : (
+          <div className="recent-bookings-list">
+
+            {recentBookings.map(
+              (booking) => (
+                <div
+                  className="recent-booking-row"
+                  key={booking.id}
+                >
+
+                  <div>
+                    <strong>
+                      {booking.cars
+                        ? `${booking.cars.brand} ${booking.cars.model}`
+                        : 'Unknown Car'}
+                    </strong>
+
+                    <span>
+                      {new Date(
+                        booking.created_at
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <span
+                    className={`dashboard-status ${booking.status}`}
+                  >
+                    {booking.status}
+                  </span>
+
+                  <strong>
+                    {Number(
+                      booking.total_price
+                    ).toLocaleString()}{' '}
+                    EGP
+                  </strong>
+
+                </div>
+              )
+            )}
+
+          </div>
+        )}
 
       </div>
 
