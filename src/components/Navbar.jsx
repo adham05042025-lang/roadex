@@ -120,13 +120,7 @@ function Navbar() {
 
           {!user && (
             <>
-              <Link
-                to="/register"
-                className={isActive('/register') ? 'active' : ''}
-                onClick={() => setMenuOpen(false)}
-              >
-                Register
-              </Link>
+              
 
               <Link
                 to="/login"
