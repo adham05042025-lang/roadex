@@ -25,7 +25,7 @@ function AdminRoute({ children }) {
       .eq('id', userData.user.id)
       .single();
 
-    if (!error && profile?.role === 'admin') {
+    if (!error && (profile?.role === 'admin' || profile?.role === 'super_admin')) {
       setAllowed(true);
     }
 

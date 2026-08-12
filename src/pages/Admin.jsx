@@ -54,10 +54,16 @@ function Admin() {
       .eq('id', userData.user.id)
       .single();
 
-    if (error || profile?.role !== 'admin') {
-      navigate('/');
-      return;
-    }
+    if (
+          error ||
+          (
+            profile?.role !== 'admin' &&
+            profile?.role !== 'super_admin'
+          )
+        ) {
+          navigate('/');
+          return;
+        }
 
     await loadDashboardData();
     setLoading(false);
