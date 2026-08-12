@@ -25,6 +25,7 @@ function Admin() {
 
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
+  const [role, setRole] = useState('');
 
   const [stats, setStats] = useState({
     users: 0,
@@ -55,17 +56,22 @@ function Admin() {
       .single();
 
     if (
-          error ||
-          (
-            profile?.role !== 'admin' &&
-            profile?.role !== 'super_admin'
-          )
-        ) {
-          navigate('/');
-          return;
-        }
+      error ||
+      (
+        profile?.role !== 'admin' &&
+        profile?.role !== 'super_admin'
+      )
+    ) {
+      navigate('/');
+      return;
+    }
 
-    await loadDashboardData();
+    setRole(profile.role);
+
+    if (profile.role === 'super_admin') {
+      await loadDashboardData();
+    }
+
     setLoading(false);
   };
 
@@ -139,7 +145,7 @@ function Admin() {
 
   const clearOldData = async () => {
     const confirmed = window.confirm(
-      'Are you sure you want to delete all old completed and cancelled bookings?\n\nThis action cannot be undone.'
+      'Are you sure you want to delete all completed and cancelled bookings?\n\nThis action cannot be undone.'
     );
 
     if (!confirmed) {
@@ -260,18 +266,104 @@ function Admin() {
     );
   }
 
+  /*
+    LIMITED ADMIN DASHBOARD
+  */
+
+  if (role === 'admin') {
+    return (
+      <div className="admin-page">
+
+        <div className="admin-header">
+          <div>
+            <h1>Admin Dashboard</h1>
+
+            <p>
+              Create customer accounts and bookings.
+            </p>
+          </div>
+        </div>
+
+        <div className="admin-section-title">
+          <div>
+            <h2>Admin Tools</h2>
+
+            <p>
+              Choose what you want to create.
+            </p>
+          </div>
+        </div>
+
+        <div className="admin-management admin-limited-management">
+
+          <div className="admin-management-card">
+
+            <div className="management-icon">
+              👤
+            </div>
+
+            <h2>Add User</h2>
+
+            <p>
+              Create a new Roadex customer account
+              from the dashboard.
+            </p>
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate('/admin/add-user')
+              }
+            >
+              Add User
+            </button>
+
+          </div>
+
+          <div className="admin-management-card">
+
+            <div className="management-icon">
+              📅
+            </div>
+
+            <h2>Add Booking</h2>
+
+            <p>
+              Create a new reservation for an
+              existing customer.
+            </p>
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate('/admin/add-booking')
+              }
+            >
+              Add Booking
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+    );
+  }
+
+  /*
+    SUPER ADMIN DASHBOARD
+  */
+
   return (
     <div className="admin-page">
-
-      {/* HEADER */}
 
       <div className="admin-header">
 
         <div>
-          <h1>Admin Dashboard</h1>
+          <h1>Super Admin Dashboard</h1>
 
           <p>
-            Roadex analytics and management.
+            Roadex analytics and full management.
           </p>
         </div>
 
@@ -299,8 +391,6 @@ function Admin() {
         </div>
 
       </div>
-
-      {/* STATS */}
 
       <div className="admin-stats">
 
@@ -348,11 +438,7 @@ function Admin() {
 
       </div>
 
-      {/* CHARTS */}
-
       <div className="admin-charts">
-
-        {/* BOOKINGS OVER TIME */}
 
         <div className="admin-chart-card">
 
@@ -427,8 +513,6 @@ function Admin() {
 
         </div>
 
-        {/* MOST BOOKED CARS */}
-
         <div className="admin-chart-card">
 
           <div className="admin-chart-header">
@@ -500,8 +584,6 @@ function Admin() {
 
         </div>
 
-        {/* BOOKING STATUS */}
-
         <div className="admin-chart-card admin-status-chart">
 
           <div className="admin-chart-header">
@@ -570,8 +652,6 @@ function Admin() {
 
       </div>
 
-      {/* MANAGEMENT */}
-
       <div className="admin-section-title">
 
         <div>
@@ -588,8 +668,6 @@ function Admin() {
 
       <div className="admin-management">
 
-        {/* CARS */}
-
         <div className="admin-management-card">
 
           <div className="management-icon">
@@ -601,9 +679,8 @@ function Admin() {
           </h2>
 
           <p>
-            Add new vehicles, update
-            details, change quantity and
-            manage car images.
+            Add new vehicles, update details,
+            change quantity and manage car images.
           </p>
 
           <button
@@ -617,8 +694,6 @@ function Admin() {
 
         </div>
 
-        {/* BOOKINGS */}
-
         <div className="admin-management-card">
 
           <div className="management-icon">
@@ -630,9 +705,8 @@ function Admin() {
           </h2>
 
           <p>
-            Review reservations, accept
-            requests, refuse bookings and
-            mark rentals as completed.
+            Review reservations, accept requests,
+            refuse bookings and mark rentals as completed.
           </p>
 
           <button
@@ -646,8 +720,6 @@ function Admin() {
 
         </div>
 
-        {/* USERS */}
-
         <div className="admin-management-card">
 
           <div className="management-icon">
@@ -659,8 +731,8 @@ function Admin() {
           </h2>
 
           <p>
-            View registered customers
-            and manage user roles.
+            View registered customers and
+            manage user roles.
           </p>
 
           <button
@@ -675,8 +747,6 @@ function Admin() {
         </div>
 
       </div>
-
-      {/* RECENT BOOKINGS */}
 
       <div className="admin-recent-section">
 
