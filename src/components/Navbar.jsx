@@ -28,7 +28,10 @@ function Navbar() {
         .eq('id', currentUser.id)
         .single();
 
-      setIsAdmin(profile?.role === 'admin');
+      setIsAdmin(
+  profile?.role === 'admin' ||
+  profile?.role === 'super_admin'
+);
     };
 
     loadUser();
