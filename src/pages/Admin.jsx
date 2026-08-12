@@ -24,6 +24,7 @@ function Admin() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
 
   const [stats, setStats] = useState({
     users: 0,
@@ -59,7 +60,6 @@ function Admin() {
     }
 
     await loadDashboardData();
-
     setLoading(false);
   };
 
@@ -102,14 +102,11 @@ function Admin() {
         }),
     ]);
 
-    const bookingRows =
-      bookingsResult.data || [];
+    const bookingRows = bookingsResult.data || [];
 
-    const pendingBookings =
-      bookingRows.filter(
-        (booking) =>
-          booking.status === 'pending'
-      ).length;
+    const pendingBookings = bookingRows.filter(
+      (booking) => booking.status === 'pending'
+    ).length;
 
     const revenue = bookingRows
       .filter(
@@ -119,10 +116,7 @@ function Admin() {
       )
       .reduce(
         (total, booking) =>
-          total +
-          Number(
-            booking.total_price || 0
-          ),
+          total + Number(booking.total_price || 0),
         0
       );
 
@@ -135,6 +129,36 @@ function Admin() {
       pendingBookings,
       revenue,
     });
+  };
+
+  const clearOldData = async () => {
+    const confirmed = window.confirm(
+      'Are you sure you want to delete all old completed and cancelled bookings?\n\nThis action cannot be undone.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setClearing(true);
+
+    const { data, error } = await supabase.rpc(
+      'clear_old_booking_data'
+    );
+
+    if (error) {
+      alert(`Could not clear old data: ${error.message}`);
+      setClearing(false);
+      return;
+    }
+
+    alert(
+      `${data || 0} old booking(s) deleted successfully.`
+    );
+
+    await loadDashboardData();
+
+    setClearing(false);
   };
 
   const bookingsOverTime = useMemo(() => {
@@ -166,10 +190,7 @@ function Admin() {
     };
 
     bookings.forEach((booking) => {
-      if (
-        statuses[booking.status] !==
-        undefined
-      ) {
+      if (statuses[booking.status] !== undefined) {
         statuses[booking.status]++;
       }
     });
@@ -179,9 +200,7 @@ function Admin() {
         status,
         count,
       }))
-      .filter(
-        (item) => item.count > 0
-      );
+      .filter((item) => item.count > 0);
   }, [bookings]);
 
   const mostBookedCars = useMemo(() => {
@@ -238,6 +257,8 @@ function Admin() {
   return (
     <div className="admin-page">
 
+      {/* HEADER */}
+
       <div className="admin-header">
 
         <div>
@@ -248,20 +269,38 @@ function Admin() {
           </p>
         </div>
 
-        <button
-          type="button"
-          className="admin-refresh-button"
-          onClick={loadDashboardData}
-        >
-          Refresh Data
-        </button>
+        <div className="admin-header-actions">
+
+          <button
+            type="button"
+            className="admin-refresh-button"
+            onClick={loadDashboardData}
+          >
+            Refresh Data
+          </button>
+
+          <button
+            type="button"
+            className="clear-old-data-button"
+            onClick={clearOldData}
+            disabled={clearing}
+          >
+            {clearing
+              ? 'Clearing...'
+              : 'Clear Old Data'}
+          </button>
+
+        </div>
 
       </div>
+
+      {/* STATS */}
 
       <div className="admin-stats">
 
         <div className="admin-stat-card">
           <span>Total Users</span>
+
           <strong>
             {stats.users}
           </strong>
@@ -269,6 +308,7 @@ function Admin() {
 
         <div className="admin-stat-card">
           <span>Total Cars</span>
+
           <strong>
             {stats.cars}
           </strong>
@@ -276,6 +316,7 @@ function Admin() {
 
         <div className="admin-stat-card">
           <span>Total Bookings</span>
+
           <strong>
             {stats.bookings}
           </strong>
@@ -283,6 +324,7 @@ function Admin() {
 
         <div className="admin-stat-card">
           <span>Pending Bookings</span>
+
           <strong>
             {stats.pendingBookings}
           </strong>
@@ -300,7 +342,11 @@ function Admin() {
 
       </div>
 
+      {/* CHARTS */}
+
       <div className="admin-charts">
+
+        {/* BOOKINGS OVER TIME */}
 
         <div className="admin-chart-card">
 
@@ -328,6 +374,7 @@ function Admin() {
                   bottom: 5,
                 }}
               >
+
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="#2b2b2b"
@@ -363,6 +410,7 @@ function Admin() {
                     r: 6,
                   }}
                 />
+
               </LineChart>
             </ResponsiveContainer>
           ) : (
@@ -372,6 +420,8 @@ function Admin() {
           )}
 
         </div>
+
+        {/* MOST BOOKED CARS */}
 
         <div className="admin-chart-card">
 
@@ -399,6 +449,7 @@ function Admin() {
                   bottom: 15,
                 }}
               >
+
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="#2b2b2b"
@@ -443,9 +494,12 @@ function Admin() {
 
         </div>
 
+        {/* BOOKING STATUS */}
+
         <div className="admin-chart-card admin-status-chart">
 
           <div className="admin-chart-header">
+
             <h2>
               Booking Status
             </h2>
@@ -453,6 +507,7 @@ function Admin() {
             <span>
               Current booking distribution
             </span>
+
           </div>
 
           {statusData.length > 0 ? (
@@ -473,6 +528,7 @@ function Admin() {
                   paddingAngle={3}
                   labelLine={false}
                 >
+
                   {statusData.map(
                     (entry, index) => (
                       <Cell
@@ -486,6 +542,7 @@ function Admin() {
                       />
                     )
                   )}
+
                 </Pie>
 
                 <Tooltip />
@@ -507,6 +564,8 @@ function Admin() {
 
       </div>
 
+      {/* MANAGEMENT */}
+
       <div className="admin-section-title">
 
         <div>
@@ -522,6 +581,8 @@ function Admin() {
       </div>
 
       <div className="admin-management">
+
+        {/* CARS */}
 
         <div className="admin-management-card">
 
@@ -550,6 +611,8 @@ function Admin() {
 
         </div>
 
+        {/* BOOKINGS */}
+
         <div className="admin-management-card">
 
           <div className="management-icon">
@@ -569,15 +632,15 @@ function Admin() {
           <button
             type="button"
             onClick={() =>
-              navigate(
-                '/admin/bookings'
-              )
+              navigate('/admin/bookings')
             }
           >
             Manage Bookings
           </button>
 
         </div>
+
+        {/* USERS */}
 
         <div className="admin-management-card">
 
@@ -606,6 +669,8 @@ function Admin() {
         </div>
 
       </div>
+
+      {/* RECENT BOOKINGS */}
 
       <div className="admin-recent-section">
 
