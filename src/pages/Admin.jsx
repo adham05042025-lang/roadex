@@ -746,6 +746,58 @@ function Admin() {
 
         </div>
 
+        <div className="admin-management-card">
+
+          <div className="management-icon">
+            👥
+          </div>
+
+          <h2>
+            Manage Customers
+          </h2>
+
+          <p>
+            Create new customer accounts and
+            remove existing customer accounts.
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate('/admin/manage-users')
+            }
+          >
+            Manage Customers
+          </button>
+
+        </div>
+
+        <div className="admin-management-card">
+
+          <div className="management-icon">
+            ➕
+          </div>
+
+          <h2>
+            Add Booking
+          </h2>
+
+          <p>
+            Create a new car reservation for an
+            existing customer.
+          </p>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate('/admin/add-booking')
+            }
+          >
+            Add Booking
+          </button>
+
+        </div>
+
       </div>
 
       <div className="admin-recent-section">
