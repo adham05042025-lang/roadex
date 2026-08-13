@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AdminRoute from './components/AdminRoute';
-
+import AdminAddBooking from './pages/AdminAddBooking';
 import Home from './pages/Home';
 import Cars from './pages/Cars';
 import CarDetails from './pages/CarDetails';
@@ -124,6 +124,15 @@ function App() {
             </AdminRoute>
           }
         />
+
+        <Route
+  path="/admin/add-booking"
+  element={
+    <AdminRoute>
+      <AdminAddBooking />
+    </AdminRoute>
+  }
+/>
 
         </Routes>
 

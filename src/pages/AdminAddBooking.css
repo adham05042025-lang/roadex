@@ -1,0 +1,250 @@
+.admin-add-booking-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 50px 20px 80px;
+}
+
+.admin-add-booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.admin-add-booking-header h1 {
+  margin: 0 0 8px;
+  color: #ffd700;
+}
+
+.admin-add-booking-header p {
+  margin: 0;
+  color: #999;
+}
+
+.admin-add-booking-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-booking-secondary-button {
+  padding: 11px 16px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #191919;
+  color: #fff;
+  cursor: pointer;
+}
+
+.admin-booking-secondary-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-add-booking-loading {
+  padding: 70px 20px;
+  text-align: center;
+  color: #aaa;
+}
+
+.admin-add-booking-message {
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  border-radius: 8px;
+}
+
+.admin-add-booking-message.success {
+  border: 1px solid #287a3f;
+  background: #102c18;
+  color: #65d46e;
+}
+
+.admin-add-booking-message.error {
+  border: 1px solid #8b2b2b;
+  background: #301313;
+  color: #ff7373;
+}
+
+.admin-add-booking-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.admin-add-booking-card {
+  padding: 28px;
+  border: 1px solid #303030;
+  border-radius: 16px;
+  background: #111;
+}
+
+.admin-add-booking-card h2 {
+  margin: 0 0 24px;
+  color: #fff;
+}
+
+.admin-booking-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.admin-booking-field label {
+  color: #ddd;
+  font-weight: 700;
+}
+
+.admin-booking-field select,
+.admin-booking-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  background: #191919;
+  color: #fff;
+  font-size: 15px;
+}
+
+.admin-booking-field select:focus,
+.admin-booking-field input:focus {
+  outline: none;
+  border-color: #ffd700;
+}
+
+.admin-booking-date-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.admin-booking-warning {
+  color: #ffb454;
+}
+
+.admin-create-booking-button {
+  width: 100%;
+  margin-top: 5px;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    #b78b00,
+    #ffd700
+  );
+  color: #111;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-create-booking-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.admin-booking-summary {
+  position: sticky;
+  top: 100px;
+}
+
+.admin-booking-car-image,
+.admin-booking-no-image {
+  width: 100%;
+  height: 190px;
+  margin-bottom: 22px;
+  border: 1px solid #303030;
+  border-radius: 10px;
+  background: #181818;
+}
+
+.admin-booking-car-image {
+  object-fit: contain;
+}
+
+.admin-booking-no-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #777;
+}
+
+.admin-booking-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px 0;
+  border-bottom: 1px solid #292929;
+}
+
+.admin-booking-summary-row span {
+  color: #999;
+}
+
+.admin-booking-summary-row strong {
+  color: #fff;
+  text-align: right;
+}
+
+.admin-booking-summary-row.total {
+  margin-top: 5px;
+  border-bottom: none;
+}
+
+.admin-booking-summary-row.total span,
+.admin-booking-summary-row.total strong {
+  color: #ffd700;
+  font-size: 18px;
+}
+
+.admin-booking-note {
+  margin: 18px 0 0;
+  color: #888;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 900px) {
+  .admin-add-booking-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-booking-summary {
+    position: static;
+  }
+}
+
+@media (max-width: 650px) {
+  .admin-add-booking-page {
+    padding: 30px 15px 60px;
+  }
+
+  .admin-add-booking-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-add-booking-actions {
+    flex-direction: column;
+  }
+
+  .admin-booking-date-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-add-booking-card {
+    padding: 22px 18px;
+  }
+
+  .admin-booking-summary-row {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .admin-booking-summary-row strong {
+    text-align: left;
+  }
+}
