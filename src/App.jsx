@@ -20,6 +20,7 @@ import AdminUsers from './pages/AdminUsers';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import './App.css';
+import AdminManageUsers from './pages/AdminManageUsers';
 
 function App() {
   return (
@@ -114,6 +115,14 @@ function App() {
         <Route
           path="/reset-password"
           element={<ResetPassword />}
+        />
+                <Route
+          path="/admin/manage-users"
+          element={
+            <AdminRoute>
+              <AdminManageUsers />
+            </AdminRoute>
+          }
         />
 
         </Routes>

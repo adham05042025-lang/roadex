@@ -279,7 +279,7 @@ function Admin() {
             <h1>Admin Dashboard</h1>
 
             <p>
-              Create customer accounts and bookings.
+              Manage customers and create bookings.
             </p>
           </div>
         </div>
@@ -289,7 +289,7 @@ function Admin() {
             <h2>Admin Tools</h2>
 
             <p>
-              Choose what you want to create.
+              Choose what you want to manage.
             </p>
           </div>
         </div>
@@ -302,20 +302,20 @@ function Admin() {
               👤
             </div>
 
-            <h2>Add User</h2>
+            <h2>Manage Users</h2>
 
             <p>
-              Create a new Roadex customer account
-              from the dashboard.
+              Add new customer accounts and remove
+              existing customers.
             </p>
 
             <button
               type="button"
               onClick={() =>
-                navigate('/admin/add-user')
+                navigate('/admin/manage-users')
               }
             >
-              Add User
+              Manage Users
             </button>
 
           </div>
