@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import './MyBookings.css';
 
 function MyBookings() {
+  const navigate = useNavigate();
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -14,10 +18,13 @@ function MyBookings() {
     setLoading(true);
     setMessage('');
 
-    const { data: userData } = await supabase.auth.getUser();
+    const { data: userData } =
+      await supabase.auth.getUser();
 
     if (!userData.user) {
-      setMessage('You must be logged in to view your bookings.');
+      setMessage(
+        'You must be logged in to view your bookings.'
+      );
       setLoading(false);
       return;
     }
@@ -26,6 +33,7 @@ function MyBookings() {
       .from('bookings')
       .select(`
         id,
+        booking_number,
         pickup_at,
         return_at,
         status,
@@ -38,7 +46,9 @@ function MyBookings() {
           image_url
         )
       `)
-      .order('created_at', { ascending: false });
+      .order('created_at', {
+        ascending: false,
+      });
 
     if (error) {
       setMessage(error.message);
@@ -50,56 +60,165 @@ function MyBookings() {
     setLoading(false);
   };
 
+  const formatDate = (date) => {
+    if (!date) {
+      return 'N/A';
+    }
+
+    return new Date(date).toLocaleString();
+  };
+
   if (loading) {
     return (
       <div className="my-bookings-page">
-        <h1>My Bookings</h1>
-        <p>Loading...</p>
+        <div className="my-bookings-loading">
+          Loading your bookings...
+        </div>
       </div>
     );
   }
 
   return (
     <div className="my-bookings-page">
-      <h1>My Bookings</h1>
+      <div className="my-bookings-header">
+        <div>
+          <h1>My Bookings</h1>
 
-      {message && <p>{message}</p>}
+          <p>
+            View your Roadex reservations and rental
+            details.
+          </p>
+        </div>
 
-      {!message && bookings.length === 0 && (
-        <p>You don't have any bookings yet.</p>
+        <button
+          type="button"
+          className="my-bookings-refresh"
+          onClick={loadBookings}
+        >
+          Refresh
+        </button>
+      </div>
+
+      {message && (
+        <div className="my-bookings-message">
+          {message}
+        </div>
       )}
 
-      {bookings.map((booking) => (
-        <div key={booking.id}>
-          <h2>
-            {booking.cars?.brand} {booking.cars?.model}
-          </h2>
-
-          {booking.cars?.image_url && (
-            <img
-              src={booking.cars.image_url}
-              alt={`${booking.cars.brand} ${booking.cars.model}`}
-              width="250"
-            />
-          )}
-
-          <p>Year: {booking.cars?.year}</p>
+      {!message && bookings.length === 0 && (
+        <div className="my-bookings-empty">
+          <h2>No Bookings Yet</h2>
 
           <p>
-            Pickup:{' '}
-            {new Date(booking.pickup_at).toLocaleString()}
+            You have not created any reservations.
           </p>
 
-          <p>
-            Return:{' '}
-            {new Date(booking.return_at).toLocaleString()}
-          </p>
-
-          <p>Status: {booking.status}</p>
-
-          <p>Total Price: {booking.total_price} EGP</p>
+          <button
+            type="button"
+            onClick={() => navigate('/cars')}
+          >
+            Browse Cars
+          </button>
         </div>
-      ))}
+      )}
+
+      <div className="my-bookings-list">
+        {bookings.map((booking) => (
+          <article
+            className="my-booking-card"
+            key={booking.id}
+          >
+            <div className="my-booking-image-area">
+              {booking.cars?.image_url ? (
+                <img
+                  src={booking.cars.image_url}
+                  alt={`${booking.cars.brand} ${booking.cars.model}`}
+                  className="my-booking-image"
+                />
+              ) : (
+                <div className="my-booking-no-image">
+                  No image available
+                </div>
+              )}
+            </div>
+
+            <div className="my-booking-content">
+              <div className="my-booking-title">
+                <div>
+                  <span className="my-booking-number">
+                    Booking #
+                    {booking.booking_number}
+                  </span>
+
+                  <h2>
+                    {booking.cars?.brand ||
+                      'Unknown'}{' '}
+                    {booking.cars?.model ||
+                      'Car'}
+                  </h2>
+                </div>
+
+                <span
+                  className={`my-booking-status ${booking.status}`}
+                >
+                  {booking.status}
+                </span>
+              </div>
+
+              <div className="my-booking-details">
+                <div className="my-booking-detail">
+                  <span>Car Year</span>
+
+                  <strong>
+                    {booking.cars?.year || 'N/A'}
+                  </strong>
+                </div>
+
+                <div className="my-booking-detail">
+                  <span>Booking Created</span>
+
+                  <strong>
+                    {formatDate(
+                      booking.created_at
+                    )}
+                  </strong>
+                </div>
+
+                <div className="my-booking-detail">
+                  <span>Pickup</span>
+
+                  <strong>
+                    {formatDate(
+                      booking.pickup_at
+                    )}
+                  </strong>
+                </div>
+
+                <div className="my-booking-detail">
+                  <span>Return</span>
+
+                  <strong>
+                    {formatDate(
+                      booking.return_at
+                    )}
+                  </strong>
+                </div>
+
+                <div className="my-booking-detail total">
+                  <span>Total Price</span>
+
+                  <strong>
+                    {Number(
+                      booking.total_price || 0
+                    ).toLocaleString()}{' '}
+                    EGP
+                  </strong>
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   );
 }
