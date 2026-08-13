@@ -68,9 +68,7 @@ function Admin() {
 
     setRole(profile.role);
 
-    if (profile.role === 'super_admin') {
-      await loadDashboardData();
-    }
+    await loadDashboardData();
 
     setLoading(false);
   };
@@ -266,101 +264,17 @@ function Admin() {
     );
   }
 
-  /*
-    LIMITED ADMIN DASHBOARD
-  */
-
-  if (role === 'admin') {
-    return (
-      <div className="admin-page">
-
-        <div className="admin-header">
-          <div>
-            <h1>Admin Dashboard</h1>
-
-            <p>
-              Manage customers and create bookings.
-            </p>
-          </div>
-        </div>
-
-        <div className="admin-section-title">
-          <div>
-            <h2>Admin Tools</h2>
-
-            <p>
-              Choose what you want to manage.
-            </p>
-          </div>
-        </div>
-
-        <div className="admin-management admin-limited-management">
-
-          <div className="admin-management-card">
-
-            <div className="management-icon">
-              👤
-            </div>
-
-            <h2>Manage Users</h2>
-
-            <p>
-              Add new customer accounts and remove
-              existing customers.
-            </p>
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate('/admin/manage-users')
-              }
-            >
-              Manage Users
-            </button>
-
-          </div>
-
-          <div className="admin-management-card">
-
-            <div className="management-icon">
-              📅
-            </div>
-
-            <h2>Add Booking</h2>
-
-            <p>
-              Create a new reservation for an
-              existing customer.
-            </p>
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate('/admin/add-booking')
-              }
-            >
-              Add Booking
-            </button>
-
-          </div>
-
-        </div>
-
-      </div>
-    );
-  }
-
-  /*
-    SUPER ADMIN DASHBOARD
-  */
-
   return (
     <div className="admin-page">
 
       <div className="admin-header">
 
         <div>
-          <h1>Super Admin Dashboard</h1>
+          <h1>
+            {role === 'super_admin'
+              ? 'Super Admin Dashboard'
+              : 'Admin Dashboard'}
+          </h1>
 
           <p>
             Roadex analytics and full management.
@@ -720,31 +634,33 @@ function Admin() {
 
         </div>
 
-        <div className="admin-management-card">
+        {role === 'super_admin' && (
+          <div className="admin-management-card">
 
-          <div className="management-icon">
-            👤
+            <div className="management-icon">
+              👤
+            </div>
+
+            <h2>
+              Users and Roles
+            </h2>
+
+            <p>
+              View staff accounts and manage
+              user roles.
+            </p>
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate('/admin/users')
+              }
+            >
+              Manage Roles
+            </button>
+
           </div>
-
-          <h2>
-            Users
-          </h2>
-
-          <p>
-            View registered customers and
-            manage user roles.
-          </p>
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate('/admin/users')
-            }
-          >
-            Manage Users
-          </button>
-
-        </div>
+        )}
 
         <div className="admin-management-card">
 
