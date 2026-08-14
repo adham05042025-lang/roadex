@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { supabase } from '../supabase';
 import './Cars.css';
 
@@ -7,6 +6,9 @@ function Cars() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedType, setSelectedType] = useState('All');
 
   useEffect(() => {
     loadCars();
@@ -19,7 +21,6 @@ function Cars() {
     const { data, error } = await supabase
       .from('cars')
       .select('*')
-      .gt('quantity', 0)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -32,94 +33,208 @@ function Cars() {
     setLoading(false);
   };
 
+  const categories = [
+    'All',
+    'City Car',
+    'Family Car',
+    'Luxury',
+    'Van',
+    '4x4',
+  ];
+
+  const carTypes = [
+    'All',
+    'Economy',
+    'Sedan',
+    'SUV',
+    'Van',
+    '4x4',
+  ];
+
+  const filteredCars = cars.filter((car) => {
+    const categoryMatch =
+      selectedCategory === 'All' ||
+      car.category === selectedCategory;
+
+    const typeMatch =
+      selectedType === 'All' ||
+      car.car_type === selectedType;
+
+    return categoryMatch && typeMatch;
+  });
+
   return (
     <div className="cars-page">
 
+      {/* Header */}
       <div className="cars-header">
-        <h1 className="cars-title">Our Vehicles</h1>
-        <p className="cars-subtitle">
-          Choose the perfect car for your next journey.
+        <h1>Our Cars</h1>
+
+        <p>
+          Choose the perfect car for your journey
         </p>
       </div>
 
-      {loading && (
-        <p className="cars-status">
-          Loading cars...
-        </p>
-      )}
+      {/* Categories */}
+      <div className="cars-filter-section">
+        <h3>Categories</h3>
 
-      {message && (
-        <p className="cars-status cars-error">
-          {message}
-        </p>
-      )}
+        <div className="cars-filters">
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              className={
+                selectedCategory === category
+                  ? 'active'
+                  : ''
+              }
+              onClick={() => {
+                setSelectedCategory(category);
+                setSelectedType('All');
+              }}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {!loading && !message && cars.length === 0 && (
-        <p className="cars-status">
-          No cars are available right now.
-        </p>
-      )}
+      {/* Car Types */}
+      <div className="cars-filter-section">
+        <h3>Car Type</h3>
 
+        <div className="cars-filters">
+          {carTypes.map((type) => (
+            <button
+              key={type}
+              type="button"
+              className={
+                selectedType === type
+                  ? 'active'
+                  : ''
+              }
+              onClick={() => setSelectedType(type)}
+            >
+              {type}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Cars */}
       <div className="cars-grid">
 
-        {cars.map((car) => (
-          <div className="car-card" key={car.id}>
+        {loading && (
+          <p>Loading cars...</p>
+        )}
 
-            <div className="car-image-container">
+        {!loading && message && (
+          <p>{message}</p>
+        )}
 
-              {car.image_url ? (
+        {!loading &&
+          !message &&
+          filteredCars.length === 0 && (
+            <p>No cars found.</p>
+          )}
+
+        {!loading &&
+          filteredCars.map((car) => (
+            <div
+              className="car-card"
+              key={car.id}
+            >
+
+              {/* Car Image */}
+              {car.image_url && (
                 <img
-                  className="car-image"
                   src={car.image_url}
                   alt={`${car.brand} ${car.model}`}
+                  className="car-card-image"
                 />
-              ) : (
-                <div className="car-no-image">
-                  No image available
-                </div>
               )}
 
-            </div>
+              <div className="car-card-content">
 
-            <div className="car-content">
+                {/* Car Name & Year */}
+                <div className="car-card-title">
+                  <h2>
+                    {car.brand} {car.model}
+                  </h2>
 
-              <h2 className="car-name">
-                {car.brand} {car.model}
-              </h2>
+                  <span>
+                    {car.year}
+                  </span>
+                </div>
 
-              <div className="car-details">
+                {/* Category & Type */}
+                <div className="car-card-tags">
 
-                <p className="car-detail">
-                  Year: {car.year}
-                </p>
+                  {car.category && (
+                    <span>
+                      {car.category}
+                    </span>
+                  )}
 
-                <p className="car-detail car-price">
-                  {car.price_per_day} EGP / day
-                </p>
+                  {car.car_type && (
+                    <span>
+                      {car.car_type}
+                    </span>
+                  )}
 
-                <p className="car-detail">
+                </div>
+
+                {/* Prices */}
+                <div className="car-prices">
+
+                  {/* Rental Price */}
+                  <div>
+                    <span>
+                      Rental Price
+                    </span>
+
+                    <strong>
+                      {car.price_per_day} EGP
+                      <small>/day</small>
+                    </strong>
+                  </div>
+
+                  {/* Driver Price */}
+                  <div>
+                    <span>
+                      With Driver
+                    </span>
+
+                    <strong>
+                      {car.driver_price_per_day != null
+                        ? `${car.driver_price_per_day} EGP`
+                        : 'Not available'}
+
+                      {car.driver_price_per_day != null && (
+                        <small>/day</small>
+                      )}
+                    </strong>
+                  </div>
+
+                </div>
+
+                {/* Available Quantity */}
+                <div className="car-quantity">
                   Available: {car.quantity}
-                </p>
+                </div>
+
+                {/* Car Details Button */}
+                <a
+                  href={`/car/${car.id}`}
+                  className="car-button"
+                >
+                  Car Details
+                </a>
 
               </div>
-
-              {car.description && (
-                <p className="car-description">
-                  {car.description}
-                </p>
-              )}
-
-              <Link
-                to={`/car/${car.id}`}
-                className="car-button"
-              >
-                View Details
-              </Link>
-
             </div>
-
-          </div>
-        ))}
+          ))}
 
       </div>
 

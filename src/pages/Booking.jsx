@@ -12,6 +12,7 @@ function Booking() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [estimatedPrice, setEstimatedPrice] = useState(0);
+  const [rentalDays, setRentalDays] = useState(1);
 
   useEffect(() => {
     if (car && pickupAt && returnAt) {
@@ -30,7 +31,13 @@ function Booking() {
       Math.ceil(difference / (1000 * 60 * 60 * 24))
     );
 
-    setEstimatedPrice(days * Number(car.price_per_day));
+    const carPrice = Number(car.price_per_day) || 0;
+    const driverPrice = Number(car.driver_price_per_day) || 0;
+
+    const totalPrice = days * (carPrice + driverPrice);
+
+    setRentalDays(days);
+    setEstimatedPrice(totalPrice);
   };
 
   const confirmBooking = async () => {
@@ -94,6 +101,9 @@ function Booking() {
     );
   }
 
+  const carPrice = Number(car.price_per_day) || 0;
+  const driverPrice = Number(car.driver_price_per_day) || 0;
+
   return (
     <div className="booking-page">
 
@@ -129,7 +139,7 @@ function Booking() {
             <p>Year: {car.year}</p>
 
             <p className="booking-price">
-              {car.price_per_day} EGP / day
+              {carPrice} EGP / day
             </p>
           </div>
 
@@ -155,6 +165,30 @@ function Booking() {
             </strong>
           </div>
 
+          <div className="booking-summary-row">
+            <span>Rental Days</span>
+
+            <strong>
+              {rentalDays} {rentalDays === 1 ? 'Day' : 'Days'}
+            </strong>
+          </div>
+
+          <div className="booking-summary-row">
+            <span>Car Rental</span>
+
+            <strong>
+              {carPrice} EGP × {rentalDays}
+            </strong>
+          </div>
+
+          <div className="booking-summary-row">
+            <span>Driver</span>
+
+            <strong>
+              {driverPrice} EGP × {rentalDays}
+            </strong>
+          </div>
+
           <div className="booking-summary-row total">
             <span>Estimated Total</span>
 
@@ -164,6 +198,7 @@ function Booking() {
           </div>
 
           <p className="booking-note">
+            Driver service is included in the rental price.
             The final price is calculated securely by the database
             when the booking is confirmed.
           </p>

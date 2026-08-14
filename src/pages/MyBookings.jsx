@@ -9,6 +9,7 @@ function MyBookings() {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [cancellingId, setCancellingId] = useState(null);
 
   useEffect(() => {
     loadBookings();
@@ -66,6 +67,59 @@ function MyBookings() {
     }
 
     return new Date(date).toLocaleString();
+  };
+
+  const cancelBooking = async (bookingId) => {
+    const confirmed = window.confirm(
+      'Are you sure you want to cancel this booking?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setMessage('');
+    setCancellingId(bookingId);
+
+    const { data: userData } =
+      await supabase.auth.getUser();
+
+    if (!userData.user) {
+      setMessage(
+        'You must be logged in to cancel a booking.'
+      );
+      setCancellingId(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        status: 'cancelled',
+      })
+      .eq('id', bookingId)
+      .eq('user_id', userData.user.id)
+      .in('status', ['pending', 'confirmed']);
+
+    if (error) {
+      setMessage(error.message);
+      setCancellingId(null);
+      return;
+    }
+
+    setBookings((currentBookings) =>
+      currentBookings.map((booking) =>
+        booking.id === bookingId
+          ? {
+              ...booking,
+              status: 'cancelled',
+            }
+          : booking
+      )
+    );
+
+    setCancellingId(null);
+    setMessage('Booking cancelled successfully.');
   };
 
   if (loading) {
@@ -215,6 +269,24 @@ function MyBookings() {
                   </strong>
                 </div>
               </div>
+
+              {(booking.status === 'pending' ||
+                booking.status === 'confirmed') && (
+                <button
+                  type="button"
+                  className="cancel-booking-button"
+                  onClick={() =>
+                    cancelBooking(booking.id)
+                  }
+                  disabled={
+                    cancellingId === booking.id
+                  }
+                >
+                  {cancellingId === booking.id
+                    ? 'Cancelling...'
+                    : 'Cancel Booking'}
+                </button>
+              )}
             </div>
           </article>
         ))}

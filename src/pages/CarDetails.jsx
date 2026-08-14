@@ -125,9 +125,12 @@ function CarDetails() {
 
   return (
     <div className="car-details-page">
+
       <div className="car-details-grid">
 
+        {/* Car Image */}
         <div className="car-details-image-area">
+
           {car.image_url ? (
             <button
               type="button"
@@ -151,32 +154,88 @@ function CarDetails() {
               No image available
             </div>
           )}
+
         </div>
 
+        {/* Car Information */}
         <div className="car-details-content">
+
           <h1>
             {car.brand} {car.model}
           </h1>
 
+          {/* Year */}
           <p className="car-details-year">
             Year: {car.year}
           </p>
 
-          <p className="car-details-price">
-            {car.price_per_day} EGP / day
+          {/* Category & Type */}
+          <div className="car-details-tags">
+
+            {car.category && (
+              <span>
+                Category: {car.category}
+              </span>
+            )}
+
+            {car.car_type && (
+              <span>
+                Type: {car.car_type}
+              </span>
+            )}
+
+          </div>
+
+          {/* Prices */}
+          <div className="car-details-prices">
+
+            <div className="car-details-price-box">
+              <span>Rental Price</span>
+
+              <strong>
+                {car.price_per_day} EGP
+                <small>/day</small>
+              </strong>
+            </div>
+
+            <div className="car-details-price-box">
+              <span>With Driver</span>
+
+              <strong>
+                {car.driver_price_per_day != null
+                  ? `${car.driver_price_per_day} EGP`
+                  : 'Not available'}
+
+                {car.driver_price_per_day != null && (
+                  <small>/day</small>
+                )}
+              </strong>
+            </div>
+
+          </div>
+
+          {/* Quantity */}
+          <p className="car-details-quantity">
+            {availableQuantity === null
+              ? `Available cars: ${car.quantity}`
+              : `Available cars for selected time: ${availableQuantity}`}
           </p>
 
+          {/* Description */}
           {car.description && (
             <p className="car-details-description">
               {car.description}
             </p>
           )}
 
+          {/* Booking */}
           <div className="booking-date-section">
+
             <h2>Choose Rental Time</h2>
 
             <label>
               Pickup Date & Time
+
               <input
                 type="datetime-local"
                 value={pickupAt}
@@ -189,6 +248,7 @@ function CarDetails() {
 
             <label>
               Return Date & Time
+
               <input
                 type="datetime-local"
                 value={returnAt}
@@ -205,18 +265,27 @@ function CarDetails() {
               onClick={checkAvailability}
               disabled={checking}
             >
-              {checking ? 'Checking...' : 'Check Availability'}
+              {checking
+                ? 'Checking...'
+                : 'Check Availability'}
             </button>
 
             {availableQuantity !== null && (
               <div className="availability-result">
+
                 {availableQuantity > 0 ? (
                   <p>
-                    Available cars: <strong>{availableQuantity}</strong>
+                    Available cars:{' '}
+                    <strong>
+                      {availableQuantity}
+                    </strong>
                   </p>
                 ) : (
-                  <p>No cars available for this time.</p>
+                  <p>
+                    No cars available for this time.
+                  </p>
                 )}
+
               </div>
             )}
 
@@ -233,19 +302,25 @@ function CarDetails() {
             >
               Book This Car
             </button>
+
           </div>
+
         </div>
+
       </div>
 
+      {/* Image Modal */}
       {imageOpen && car.image_url && (
         <div
           className="image-modal"
           onClick={() => setImageOpen(false)}
         >
+
           <div
             className="image-modal-content"
             onClick={(e) => e.stopPropagation()}
           >
+
             <button
               type="button"
               className="image-modal-close"
@@ -260,9 +335,12 @@ function CarDetails() {
               alt={`${car.brand} ${car.model}`}
               className="image-modal-image"
             />
+
           </div>
+
         </div>
       )}
+
     </div>
   );
 }

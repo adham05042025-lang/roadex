@@ -102,6 +102,30 @@ function AdminCars() {
     setSaving(true);
 
     try {
+      if (driverPricePerDay === '') {
+        throw new Error(
+          'Driver Price per day is required.'
+        );
+      }
+
+      if (Number(driverPricePerDay) < 0) {
+        throw new Error(
+          'Driver Price cannot be negative.'
+        );
+      }
+
+      if (Number(pricePerDay) < 0) {
+        throw new Error(
+          'Price per day cannot be negative.'
+        );
+      }
+
+      if (Number(quantity) < 1) {
+        throw new Error(
+          'Quantity must be at least 1.'
+        );
+      }
+
       let imageUrl = currentImageUrl || null;
 
       if (imageFile) {
@@ -113,10 +137,7 @@ function AdminCars() {
         model: model.trim(),
         year: Number(year),
         price_per_day: Number(pricePerDay),
-        driver_price_per_day:
-          driverPricePerDay === ''
-            ? null
-            : Number(driverPricePerDay),
+        driver_price_per_day: Number(driverPricePerDay),
         category: category.trim(),
         car_type: carType.trim(),
         quantity: Number(quantity),
@@ -163,7 +184,9 @@ function AdminCars() {
     setModel(car.model || '');
     setYear(car.year || '');
     setPricePerDay(car.price_per_day || '');
-    setDriverPricePerDay(car.driver_price_per_day ?? '');
+    setDriverPricePerDay(
+      car.driver_price_per_day ?? ''
+    );
     setCategory(car.category || '');
     setCarType(car.car_type || '');
     setQuantity(car.quantity ?? 1);
@@ -172,7 +195,9 @@ function AdminCars() {
     setCurrentImageUrl(car.image_url || '');
     setImageFile(null);
 
-    const fileInput = document.getElementById('car-image-input');
+    const fileInput = document.getElementById(
+      'car-image-input'
+    );
 
     if (fileInput) {
       fileInput.value = '';
@@ -262,7 +287,9 @@ function AdminCars() {
             min="0"
             step="0.01"
             value={pricePerDay}
-            onChange={(e) => setPricePerDay(e.target.value)}
+            onChange={(e) =>
+              setPricePerDay(e.target.value)
+            }
             required
           />
 
@@ -275,6 +302,7 @@ function AdminCars() {
             onChange={(e) =>
               setDriverPricePerDay(e.target.value)
             }
+            required
           />
 
           <select
@@ -306,9 +334,11 @@ function AdminCars() {
           <input
             type="number"
             placeholder="Quantity"
-            min="0"
+            min="1"
             value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
+            onChange={(e) =>
+              setQuantity(e.target.value)
+            }
             required
           />
 
@@ -322,7 +352,9 @@ function AdminCars() {
               type="file"
               accept="image/*"
               onChange={(e) =>
-                setImageFile(e.target.files?.[0] || null)
+                setImageFile(
+                  e.target.files?.[0] || null
+                )
               }
             />
           </div>

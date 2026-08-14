@@ -265,3 +265,34 @@
     grid-column: auto;
   }
 }
+/* Cancel Booking Button */
+.cancel-booking-button {
+  margin-top: 24px;
+  width: 100%;
+  padding: 13px 20px;
+  border: 1px solid rgba(255, 80, 80, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 70, 70, 0.08);
+  color: #ff6b6b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.cancel-booking-button:hover {
+  background: rgba(255, 70, 70, 0.15);
+  border-color: rgba(255, 80, 80, 0.6);
+  color: #ff8585;
+  transform: translateY(-1px);
+}
+
+.cancel-booking-button:active {
+  transform: translateY(0);
+}
+
+.cancel-booking-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}

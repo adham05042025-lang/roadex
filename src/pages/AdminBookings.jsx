@@ -88,11 +88,29 @@ function AdminBookings() {
     setLoading(false);
   };
 
-  const updateStatus = async (
-    bookingId,
-    newStatus
-  ) => {
+  const updateStatus = async (bookingId, newStatus) => {
     setMessage('');
+
+    if (newStatus === 'cancelled') {
+      const confirmed = window.confirm(
+        'Are you sure you want to cancel this booking?'
+      );
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    if (newStatus === 'completed') {
+      const confirmed = window.confirm(
+        'Are you sure you want to mark this rental as completed?'
+      );
+
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setUpdatingId(bookingId);
 
     const { error } = await supabase
@@ -108,18 +126,22 @@ function AdminBookings() {
       return;
     }
 
-    setBookings((currentBookings) =>
-      currentBookings.map((booking) =>
-        booking.id === bookingId
-          ? {
-              ...booking,
-              status: newStatus,
-            }
-          : booking
-      )
-    );
+    if (newStatus === 'confirmed') {
+      setMessage('Booking accepted successfully.');
+    } else if (newStatus === 'completed') {
+      setMessage(
+        'Rental completed successfully. The car is available again.'
+      );
+    } else if (newStatus === 'cancelled') {
+      setMessage(
+        'Booking cancelled successfully. The car is available again.'
+      );
+    } else {
+      setMessage('Booking updated successfully.');
+    }
 
-    setMessage('Booking updated successfully.');
+    await loadBookings();
+
     setUpdatingId('');
   };
 
@@ -172,6 +194,7 @@ function AdminBookings() {
 
   return (
     <div className="admin-bookings-page">
+
       <div className="admin-bookings-header">
         <h1>Manage Bookings</h1>
 
@@ -182,7 +205,9 @@ function AdminBookings() {
       </div>
 
       <div className="admin-bookings-toolbar">
+
         <div className="admin-booking-search">
+
           <label htmlFor="booking-number-search">
             Search by Booking Number
           </label>
@@ -202,9 +227,11 @@ function AdminBookings() {
               )
             }
           />
+
         </div>
 
         <div className="admin-bookings-toolbar-actions">
+
           <button
             type="button"
             className="sort-bookings-button"
@@ -223,10 +250,13 @@ function AdminBookings() {
           >
             {loading ? 'Loading...' : 'Refresh'}
           </button>
+
         </div>
+
       </div>
 
       <div className="admin-bookings-results">
+
         <span>
           {visibleBookings.length}{' '}
           {visibleBookings.length === 1
@@ -240,6 +270,7 @@ function AdminBookings() {
             ? 'newest first'
             : 'oldest first'}
         </span>
+
       </div>
 
       {message && (
@@ -264,14 +295,20 @@ function AdminBookings() {
 
       {!loading && (
         <div className="admin-bookings-list">
+
           {visibleBookings.map((booking) => (
+
             <div
               className="admin-booking-card"
               key={booking.id}
             >
+
               <div className="admin-booking-info">
+
                 <div className="admin-booking-title">
+
                   <div>
+
                     <span className="booking-number">
                       Booking #
                       {booking.booking_number}
@@ -283,6 +320,7 @@ function AdminBookings() {
                       {booking.cars?.model ||
                         'Car'}
                     </h2>
+
                   </div>
 
                   <span
@@ -290,46 +328,68 @@ function AdminBookings() {
                   >
                     {booking.status}
                   </span>
+
                 </div>
 
                 <div className="admin-booking-customer">
+
                   <h3>Customer Information</h3>
 
                   <div className="admin-booking-details-grid">
+
                     <div className="booking-detail-box">
-                      <span>Customer Name</span>
+
+                      <span>
+                        Customer Name
+                      </span>
 
                       <strong>
                         {booking.customer?.full_name ||
                           'Unknown Customer'}
                       </strong>
+
                     </div>
 
                     <div className="booking-detail-box">
-                      <span>Phone Number</span>
+
+                      <span>
+                        Phone Number
+                      </span>
 
                       <strong>
                         {booking.customer?.phone ||
                           'Not available'}
                       </strong>
+
                     </div>
 
                     <div className="booking-detail-box full-width">
-                      <span>Customer Account ID</span>
+
+                      <span>
+                        Customer Account ID
+                      </span>
 
                       <strong className="booking-user-id">
                         {booking.user_id}
                       </strong>
+
                     </div>
+
                   </div>
+
                 </div>
 
                 <div className="admin-booking-rental">
+
                   <h3>Rental Information</h3>
 
                   <div className="admin-booking-details-grid">
+
                     <div className="booking-detail-box">
-                      <span>Car</span>
+
+                      <span>
+                        Car
+                      </span>
 
                       <strong>
                         {booking.cars?.brand ||
@@ -337,48 +397,69 @@ function AdminBookings() {
                         {booking.cars?.model ||
                           'Car'}
                       </strong>
+
                     </div>
 
                     <div className="booking-detail-box">
-                      <span>Car Year</span>
+
+                      <span>
+                        Car Year
+                      </span>
 
                       <strong>
-                        {booking.cars?.year || 'N/A'}
+                        {booking.cars?.year ||
+                          'N/A'}
                       </strong>
+
                     </div>
 
                     <div className="booking-detail-box">
-                      <span>Pickup</span>
+
+                      <span>
+                        Pickup
+                      </span>
 
                       <strong>
                         {formatDate(
                           booking.pickup_at
                         )}
                       </strong>
+
                     </div>
 
                     <div className="booking-detail-box">
-                      <span>Return</span>
+
+                      <span>
+                        Return
+                      </span>
 
                       <strong>
                         {formatDate(
                           booking.return_at
                         )}
                       </strong>
+
                     </div>
 
                     <div className="booking-detail-box">
-                      <span>Booking Created</span>
+
+                      <span>
+                        Booking Created
+                      </span>
 
                       <strong>
                         {formatDate(
                           booking.created_at
                         )}
                       </strong>
+
                     </div>
 
                     <div className="booking-detail-box">
-                      <span>Total Price</span>
+
+                      <span>
+                        Total Price
+                      </span>
 
                       <strong>
                         {Number(
@@ -386,12 +467,17 @@ function AdminBookings() {
                         ).toLocaleString()}{' '}
                         EGP
                       </strong>
+
                     </div>
+
                   </div>
+
                 </div>
+
               </div>
 
               <div className="admin-booking-actions">
+
                 {booking.status === 'pending' && (
                   <button
                     type="button"
@@ -412,8 +498,7 @@ function AdminBookings() {
                   </button>
                 )}
 
-                {booking.status ===
-                  'confirmed' && (
+                {booking.status === 'confirmed' && (
                   <button
                     type="button"
                     className="complete-booking"
@@ -434,8 +519,7 @@ function AdminBookings() {
                 )}
 
                 {(booking.status === 'pending' ||
-                  booking.status ===
-                    'confirmed') && (
+                  booking.status === 'confirmed') && (
                   <button
                     type="button"
                     className="refuse-booking"
@@ -449,28 +533,33 @@ function AdminBookings() {
                       updatingId === booking.id
                     }
                   >
-                    Refuse Booking
+                    {updatingId === booking.id
+                      ? 'Updating...'
+                      : 'Refuse Booking'}
                   </button>
                 )}
 
-                {booking.status ===
-                  'completed' && (
+                {booking.status === 'completed' && (
                   <div className="booking-final-state">
                     Rental Completed
                   </div>
                 )}
 
-                {booking.status ===
-                  'cancelled' && (
+                {booking.status === 'cancelled' && (
                   <div className="booking-final-state cancelled">
                     Booking Cancelled
                   </div>
                 )}
+
               </div>
+
             </div>
+
           ))}
+
         </div>
       )}
+
     </div>
   );
 }
