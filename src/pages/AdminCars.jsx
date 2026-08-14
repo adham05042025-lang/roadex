@@ -11,6 +11,9 @@ function AdminCars() {
   const [model, setModel] = useState('');
   const [year, setYear] = useState('');
   const [pricePerDay, setPricePerDay] = useState('');
+  const [driverPricePerDay, setDriverPricePerDay] = useState('');
+  const [category, setCategory] = useState('');
+  const [carType, setCarType] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [description, setDescription] = useState('');
 
@@ -48,6 +51,9 @@ function AdminCars() {
     setModel('');
     setYear('');
     setPricePerDay('');
+    setDriverPricePerDay('');
+    setCategory('');
+    setCarType('');
     setQuantity(1);
     setDescription('');
     setImageFile(null);
@@ -107,6 +113,12 @@ function AdminCars() {
         model: model.trim(),
         year: Number(year),
         price_per_day: Number(pricePerDay),
+        driver_price_per_day:
+          driverPricePerDay === ''
+            ? null
+            : Number(driverPricePerDay),
+        category: category.trim(),
+        car_type: carType.trim(),
         quantity: Number(quantity),
         description: description.trim(),
         image_url: imageUrl,
@@ -151,6 +163,9 @@ function AdminCars() {
     setModel(car.model || '');
     setYear(car.year || '');
     setPricePerDay(car.price_per_day || '');
+    setDriverPricePerDay(car.driver_price_per_day ?? '');
+    setCategory(car.category || '');
+    setCarType(car.car_type || '');
     setQuantity(car.quantity ?? 1);
     setDescription(car.description || '');
 
@@ -250,6 +265,43 @@ function AdminCars() {
             onChange={(e) => setPricePerDay(e.target.value)}
             required
           />
+
+          <input
+            type="number"
+            placeholder="Driver Price per day"
+            min="0"
+            step="0.01"
+            value={driverPricePerDay}
+            onChange={(e) =>
+              setDriverPricePerDay(e.target.value)
+            }
+          />
+
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+          >
+            <option value="">Select Category</option>
+            <option value="City Car">City Car</option>
+            <option value="Family Car">Family Car</option>
+            <option value="Luxury">Luxury</option>
+            <option value="Van">Van</option>
+            <option value="4x4">4x4</option>
+          </select>
+
+          <select
+            value={carType}
+            onChange={(e) => setCarType(e.target.value)}
+            required
+          >
+            <option value="">Select Car Type</option>
+            <option value="Economy">Economy</option>
+            <option value="Sedan">Sedan</option>
+            <option value="SUV">SUV</option>
+            <option value="Van">Van</option>
+            <option value="4x4">4x4</option>
+          </select>
 
           <input
             type="number"
@@ -376,7 +428,20 @@ function AdminCars() {
               <p>Year: {car.year}</p>
 
               <p>
+                Category: {car.category || '—'}
+              </p>
+
+              <p>
+                Type: {car.car_type || '—'}
+              </p>
+
+              <p>
                 Price: {car.price_per_day} EGP/day
+              </p>
+
+              <p>
+                Driver Price:{' '}
+                {car.driver_price_per_day ?? '—'} EGP/day
               </p>
 
               <p>
