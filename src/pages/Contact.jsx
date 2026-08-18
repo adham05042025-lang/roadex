@@ -93,57 +93,62 @@ function Contact() {
   return (
     <div className="contact-page">
 
-      <h2
-        style={{
-          display: 'inline-block',
-          fontWeight: '700',
-          background:
-            'linear-gradient(90deg, #8B6B00 0%, #D4AF37 25%, #FFD700 50%, #F8E58C 75%, #8B6B00 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          color: '#D4AF37',
-        }}
-      >
-        Contact Us
-      </h2>
+      <div className="contact-header">
+        <h2>Contact Us</h2>
 
+        <p>
+          Have a question or need assistance?
+          Get in touch with Roadex.
+        </p>
+      </div>
+
+      {/* Quick Contact */}
       <div className="quick-icons">
 
         <a
           href="https://wa.me/201505516072"
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="WhatsApp"
         >
-          <FaWhatsapp size={40} color="#25D366" />
+          <FaWhatsapp />
         </a>
 
-        <a href="tel:+201505516072">
-          <FaPhone size={40} color="#007bff" />
+        <a
+          href="tel:+201505516072"
+          aria-label="Phone"
+        >
+          <FaPhone />
         </a>
 
-        <a href="mailto:info@roadex-eg.com">
-          <FaEnvelope size={40} color="#ea4335" />
+        <a
+          href="mailto:info@roadex-eg.com"
+          aria-label="Email"
+        >
+          <FaEnvelope />
         </a>
 
         <a
           href="https://instagram.com"
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Instagram"
         >
-          <FaInstagram size={40} color="#E4405F" />
+          <FaInstagram />
         </a>
 
         <a
           href="https://facebook.com"
           target="_blank"
           rel="noopener noreferrer"
+          aria-label="Facebook"
         >
-          <FaFacebook size={40} color="#1877F2" />
+          <FaFacebook />
         </a>
 
       </div>
 
+      {/* Contact Form */}
       <form
         className="contact-form"
         onSubmit={handleSubmit}
@@ -172,86 +177,116 @@ function Contact() {
           </option>
         </select>
 
-        <label
-          className="form-label"
-          htmlFor="full-name"
-        >
-          Full Name
-        </label>
+        {/* Name + Phone */}
+        <div className="form-grid">
 
-        <input
-          id="full-name"
-          value={formData.fullName}
-          onChange={(event) =>
-            updateField(
-              'fullName',
-              event.target.value
-            )
-          }
-          required
-        />
+          <div>
+            <label
+              className="form-label"
+              htmlFor="full-name"
+            >
+              Full Name
+            </label>
 
-        <label
-          className="form-label"
-          htmlFor="phone"
-        >
-          Phone Number
-        </label>
+            <input
+              id="full-name"
+              type="text"
+              placeholder="Enter your full name"
+              value={formData.fullName}
+              onChange={(event) =>
+                updateField(
+                  'fullName',
+                  event.target.value
+                )
+              }
+              autoComplete="name"
+              required
+            />
+          </div>
 
-        <input
-          id="phone"
-          value={formData.phone}
-          onChange={(event) =>
-            updateField(
-              'phone',
-              event.target.value
-            )
-          }
-          required
-        />
+          <div>
+            <label
+              className="form-label"
+              htmlFor="phone"
+            >
+              Phone Number
+            </label>
 
-        <label
-          className="form-label"
-          htmlFor="email"
-        >
-          Email Address
-        </label>
+            <input
+              id="phone"
+              type="tel"
+              placeholder="Enter your phone number"
+              value={formData.phone}
+              onChange={(event) =>
+                updateField(
+                  'phone',
+                  event.target.value
+                )
+              }
+              autoComplete="tel"
+              required
+            />
+          </div>
 
-        <input
-          id="email"
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          value={formData.email}
-          onChange={(event) =>
-            updateField(
-              'email',
-              event.target.value
-            )
-          }
-          required
-        />
+        </div>
 
-        <label
-          className="form-label"
-          htmlFor="address"
-        >
-          Address
-        </label>
+        {/* Email + Address */}
+        <div className="form-grid">
 
-        <input
-          id="address"
-          value={formData.address}
-          onChange={(event) =>
-            updateField(
-              'address',
-              event.target.value
-            )
-          }
-        />
+          <div>
+            <label
+              className="form-label"
+              htmlFor="email"
+            >
+              Email Address
+            </label>
 
+            <input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              inputMode="email"
+              autoComplete="email"
+              value={formData.email}
+              onChange={(event) =>
+                updateField(
+                  'email',
+                  event.target.value
+                )
+              }
+              required
+            />
+          </div>
+
+          <div>
+            <label
+              className="form-label"
+              htmlFor="address"
+            >
+              Address
+            </label>
+
+            <input
+              id="address"
+              type="text"
+              placeholder="Enter your address"
+              value={formData.address}
+              onChange={(event) =>
+                updateField(
+                  'address',
+                  event.target.value
+                )
+              }
+              autoComplete="street-address"
+            />
+          </div>
+
+        </div>
+
+        {/* Complaint */}
         {requestType === 'complaint' && (
-          <>
+          <div>
+
             <label
               className="form-label"
               htmlFor="complaint"
@@ -262,6 +297,7 @@ function Contact() {
             <textarea
               id="complaint"
               rows="5"
+              placeholder="Tell us about your complaint..."
               value={formData.complaint}
               onChange={(event) =>
                 updateField(
@@ -270,11 +306,14 @@ function Contact() {
                 )
               }
             />
-          </>
+
+          </div>
         )}
 
+        {/* Inquiry */}
         {requestType === 'inquiry' && (
-          <>
+          <div>
+
             <label
               className="form-label"
               htmlFor="inquiry"
@@ -285,6 +324,7 @@ function Contact() {
             <textarea
               id="inquiry"
               rows="5"
+              placeholder="How can we help you?"
               value={formData.inquiry}
               onChange={(event) =>
                 updateField(
@@ -293,11 +333,12 @@ function Contact() {
                 )
               }
             />
-          </>
+
+          </div>
         )}
 
         <button type="submit">
-          Send
+          Send Message
         </button>
 
       </form>
@@ -312,4 +353,4 @@ function Contact() {
   );
 }
 
-export default Contact; 
+export default Contact;
