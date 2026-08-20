@@ -129,7 +129,7 @@ function Contact() {
         </a>
 
         <a
-          href="https://instagram.com"
+          href="https://www.instagram.com/roadexeg?igsh=MWliOGkzdTU4Zm5mcQ=="
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Instagram"
@@ -138,7 +138,7 @@ function Contact() {
         </a>
 
         <a
-          href="https://facebook.com"
+          href="https://www.facebook.com/share/1JimN4e6Rh/?mibextid=wwXIfr"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Facebook"
