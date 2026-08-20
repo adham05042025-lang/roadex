@@ -1,4 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { FaWhatsapp } from 'react-icons/fa';
 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -26,134 +28,62 @@ import AdminAddBooking from './pages/AdminAddBooking';
 import './App.css';
 
 function App() {
+  // 🔥 Dark/Light Mode
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem('theme');
+    return saved || 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  const whatsappNumber = '201505516072';
+  const whatsappLink = `https://wa.me/${whatsappNumber}`;
+
   return (
     <div className="app">
-      <Navbar />
+      <Navbar toggleTheme={toggleTheme} theme={theme} />
 
       <main className="main-content">
         <Routes>
-          {/*
-            PUBLIC PAGES
-          */}
+          <Route path="/" element={<Home />} />
+          <Route path="/cars" element={<Cars />} />
+          <Route path="/car/:id" element={<CarDetails />} />
+          <Route path="/booking" element={<Booking />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/my-bookings" element={<MyBookings />} />
 
-          <Route
-            path="/"
-            element={<Home />}
-          />
-
-          <Route
-            path="/cars"
-            element={<Cars />}
-          />
-
-          <Route
-            path="/car/:id"
-            element={<CarDetails />}
-          />
-
-          <Route
-            path="/booking"
-            element={<Booking />}
-          />
-
-          <Route
-            path="/contact"
-            element={<Contact />}
-          />
-
-          <Route
-            path="/register"
-            element={<Register />}
-          />
-
-          <Route
-            path="/login"
-            element={<Login />}
-          />
-
-          <Route
-            path="/forgot-password"
-            element={<ForgotPassword />}
-          />
-
-          <Route
-            path="/reset-password"
-            element={<ResetPassword />}
-          />
-
-          <Route
-            path="/my-bookings"
-            element={<MyBookings />}
-          />
-
-          {/*
-            SHARED ADMIN AND SUPER ADMIN PAGES
-          */}
-
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <Admin />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="/admin/cars"
-            element={
-              <AdminRoute>
-                <AdminCars />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="/admin/bookings"
-            element={
-              <AdminRoute>
-                <AdminBookings />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="/admin/manage-users"
-            element={
-              <AdminRoute>
-                <AdminManageUsers />
-              </AdminRoute>
-            }
-          />
-
-          <Route
-            path="/admin/add-booking"
-            element={
-              <AdminRoute>
-                <AdminAddBooking />
-              </AdminRoute>
-            }
-          />
-
-          {/*
-            SUPER-ADMIN-ONLY PAGE
-
-            Only Super Admin can view accounts
-            and change user roles.
-          */}
-
-          <Route
-            path="/admin/users"
-            element={
-              <SuperAdminRoute>
-                <AdminUsers />
-              </SuperAdminRoute>
-            }
-          />
+          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+          <Route path="/admin/cars" element={<AdminRoute><AdminCars /></AdminRoute>} />
+          <Route path="/admin/bookings" element={<AdminRoute><AdminBookings /></AdminRoute>} />
+          <Route path="/admin/manage-users" element={<AdminRoute><AdminManageUsers /></AdminRoute>} />
+          <Route path="/admin/add-booking" element={<AdminRoute><AdminAddBooking /></AdminRoute>} />
+          <Route path="/admin/users" element={<SuperAdminRoute><AdminUsers /></SuperAdminRoute>} />
         </Routes>
       </main>
 
       <Footer />
+
+      <a
+        href={whatsappLink}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="whatsapp-float"
+        aria-label="Chat on WhatsApp"
+      >
+        <FaWhatsapp className="whatsapp-icon" />
+        <span className="whatsapp-tooltip">Chat with us</span>
+      </a>
     </div>
   );
 }

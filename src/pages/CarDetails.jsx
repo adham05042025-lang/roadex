@@ -123,6 +123,9 @@ function CarDetails() {
     );
   }
 
+  // 🔥 سعر شامل (عربية + سواق)
+  const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+
   return (
     <div className="car-details-page">
 
@@ -186,29 +189,18 @@ function CarDetails() {
 
           </div>
 
-          {/* Prices */}
+          {/* 🔥 Price شامل */}
           <div className="car-details-prices">
 
             <div className="car-details-price-box">
-              <span>Rental Price</span>
+              <span>Price Per Day</span>
 
               <strong>
-                {car.price_per_day} EGP
+                {totalPerDay.toLocaleString()} EGP
                 <small>/day</small>
-              </strong>
-            </div>
-
-            <div className="car-details-price-box">
-              <span>With Driver</span>
-
-              <strong>
-                {car.driver_price_per_day != null
-                  ? `${car.driver_price_per_day} EGP`
-                  : 'Not available'}
-
-                {car.driver_price_per_day != null && (
-                  <small>/day</small>
-                )}
+                <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>
+                  (Car + Driver)
+                </small>
               </strong>
             </div>
 

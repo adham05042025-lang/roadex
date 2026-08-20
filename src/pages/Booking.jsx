@@ -13,6 +13,7 @@ function Booking() {
   const [message, setMessage] = useState('');
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [rentalDays, setRentalDays] = useState(1);
+  const [rentalHours, setRentalHours] = useState(0);
 
   useEffect(() => {
     if (car && pickupAt && returnAt) {
@@ -25,18 +26,22 @@ function Booking() {
     const returnDate = new Date(returnAt);
 
     const difference = returnDate - pickup;
+    const hours = difference / (1000 * 60 * 60);
 
-    const days = Math.max(
-      1,
-      Math.ceil(difference / (1000 * 60 * 60 * 24))
-    );
+    // 12 ساعة = يوم واحد
+    let days;
+    if (hours <= 12) {
+      days = 1;
+    } else {
+      days = Math.ceil(hours / 12);
+    }
 
-    const carPrice = Number(car.price_per_day) || 0;
-    const driverPrice = Number(car.driver_price_per_day) || 0;
-
-    const totalPrice = days * (carPrice + driverPrice);
+    // 🔥 سعر شامل (عربية + سواق)
+    const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+    const totalPrice = days * totalPerDay;
 
     setRentalDays(days);
+    setRentalHours(Math.round(hours * 10) / 10);
     setEstimatedPrice(totalPrice);
   };
 
@@ -101,8 +106,8 @@ function Booking() {
     );
   }
 
-  const carPrice = Number(car.price_per_day) || 0;
-  const driverPrice = Number(car.driver_price_per_day) || 0;
+  // 🔥 سعر شامل (عربية + سواق)
+  const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
 
   return (
     <div className="booking-page">
@@ -139,7 +144,10 @@ function Booking() {
             <p>Year: {car.year}</p>
 
             <p className="booking-price">
-              {carPrice} EGP / day
+              {totalPerDay.toLocaleString()} EGP / day
+              <small style={{ fontSize: '11px', color: '#888', display: 'block' }}>
+                (Car + Driver) — 12 hours = 1 day
+              </small>
             </p>
           </div>
 
@@ -166,26 +174,40 @@ function Booking() {
           </div>
 
           <div className="booking-summary-row">
+            <span>Total Duration</span>
+
+            <strong>
+              {rentalHours} hours
+            </strong>
+          </div>
+
+          <div className="booking-summary-row">
             <span>Rental Days</span>
 
             <strong>
               {rentalDays} {rentalDays === 1 ? 'Day' : 'Days'}
+              <small style={{ fontSize: '11px', color: '#888', display: 'block' }}>
+                (12 hours = 1 day)
+              </small>
             </strong>
           </div>
 
           <div className="booking-summary-row">
-            <span>Car Rental</span>
+            <span>Price Per Day</span>
 
             <strong>
-              {carPrice} EGP × {rentalDays}
+              {totalPerDay.toLocaleString()} EGP
+              <small style={{ fontSize: '11px', color: '#888', display: 'block' }}>
+                (Car + Driver)
+              </small>
             </strong>
           </div>
 
           <div className="booking-summary-row">
-            <span>Driver</span>
+            <span>Total Rental</span>
 
             <strong>
-              {driverPrice} EGP × {rentalDays}
+              {totalPerDay.toLocaleString()} EGP × {rentalDays}
             </strong>
           </div>
 
@@ -193,14 +215,17 @@ function Booking() {
             <span>Estimated Total</span>
 
             <strong>
-              {estimatedPrice} EGP
+              {estimatedPrice.toLocaleString()} EGP
             </strong>
           </div>
 
           <p className="booking-note">
-            Driver service is included in the rental price.
             The final price is calculated securely by the database
             when the booking is confirmed.
+            <br />
+            <small style={{ color: '#888' }}>
+              Note: 12 hours = 1 rental day. Price includes Car + Driver.
+            </small>
           </p>
 
           {message && (

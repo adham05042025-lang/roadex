@@ -1,19 +1,30 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
+import { FaSun, FaMoon } from 'react-icons/fa';
 import './Navbar.css';
 
-function Navbar() {
+function Navbar({ toggleTheme, theme }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
   const location = useLocation();
 
+  // تأثير التمرير
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // تحميل المستخدم
   useEffect(() => {
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser();
-
       const currentUser = data.user;
       setUser(currentUser);
 
@@ -29,9 +40,8 @@ function Navbar() {
         .single();
 
       setIsAdmin(
-  profile?.role === 'admin' ||
-  profile?.role === 'super_admin'
-);
+        profile?.role === 'admin' || profile?.role === 'super_admin'
+      );
     };
 
     loadUser();
@@ -52,7 +62,9 @@ function Navbar() {
           .eq('id', currentUser.id)
           .single();
 
-        setIsAdmin(profile?.role === 'admin');
+        setIsAdmin(
+          profile?.role === 'admin' || profile?.role === 'super_admin'
+        );
       }
     );
 
@@ -63,24 +75,21 @@ function Navbar() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-
     setUser(null);
     setIsAdmin(false);
     setMenuOpen(false);
-
     window.location.href = '/';
   };
 
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
       <div className="nav-container">
 
         <div className="logo">
           <Link to="/" onClick={() => setMenuOpen(false)}>
             <img src="/logo.png" alt="Roadex" />
-
             <span className="logo-text">
               Roadex <span>Car Rent</span>
             </span>
@@ -121,6 +130,16 @@ function Navbar() {
             Contact
           </Link>
 
+          {user && isAdmin && (
+            <Link
+              to="/admin"
+              className={isActive('/admin') ? 'active admin-link' : 'admin-link'}
+              onClick={() => setMenuOpen(false)}
+            >
+              Dashboard
+            </Link>
+          )}
+
           {!user && (
             <>
               <Link
@@ -133,10 +152,10 @@ function Navbar() {
 
               <Link
                 to="/login"
-                className={isActive('/login') ? 'active' : ''}
+                className={isActive('/login') ? 'active nav-login-link' : 'nav-login-link'}
                 onClick={() => setMenuOpen(false)}
               >
-                Login
+                Sign In
               </Link>
             </>
           )}
@@ -151,23 +170,31 @@ function Navbar() {
                 My Bookings
               </Link>
 
-              {isAdmin && (
-                <Link
-                  to="/admin"
-                  className={isActive('/admin') ? 'active' : ''}
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Dashboard
-                </Link>
-              )}
-
-              <button type="button" onClick={handleLogout}>
+              <button
+                type="button"
+                className="nav-logout-btn"
+                onClick={handleLogout}
+              >
                 Logout
               </button>
             </>
           )}
 
         </div>
+
+        {/* 🔥 Theme Toggle Button */}
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? (
+            <FaSun className="theme-icon" />
+          ) : (
+            <FaMoon className="theme-icon" />
+          )}
+        </button>
 
         <button
           type="button"

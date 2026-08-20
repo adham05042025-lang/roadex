@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 import './Home.css';
 
 function Home() {
+  const navigate = useNavigate();
   const [cars, setCars] = useState([]);
+
+  // State للـ Booking Bar
+  const [selectedCarId, setSelectedCarId] = useState('');
+  const [pickupAt, setPickupAt] = useState('');
+  const [returnAt, setReturnAt] = useState('');
 
   useEffect(() => {
     loadCars();
@@ -21,30 +27,52 @@ function Home() {
     }
   };
 
+  // وظيفة البحث عن سيارة
+  const handleFindCar = (e) => {
+    e.preventDefault();
+
+    if (!selectedCarId || !pickupAt || !returnAt) {
+      alert('Please select a car and choose pickup/return dates.');
+      return;
+    }
+
+    navigate('/booking', {
+      state: {
+        car: cars.find((c) => c.id === selectedCarId),
+        pickupAt,
+        returnAt,
+      },
+    });
+  };
+
   const categories = [
     {
       number: '01',
       title: 'City Cars',
       text: 'Smart and economical cars for everyday city driving.',
       type: 'City Car',
+      link: '/cars',
     },
     {
       number: '02',
       title: 'Family Cars',
       text: 'Comfortable vehicles designed for family journeys.',
       type: 'Family Car',
+      link: '/cars',
     },
     {
       number: '03',
       title: 'Luxury',
       text: 'Premium vehicles for a first-class driving experience.',
       type: 'Luxury',
+      link: '/cars',
     },
     {
       number: '04',
       title: 'SUV & 4x4',
       text: 'Powerful vehicles ready for every kind of journey.',
       type: '4x4',
+      link: '/cars',
     },
   ];
 
@@ -118,25 +146,28 @@ function Home() {
             <h2>Find Your <strong>Perfect Ride</strong></h2>
           </div>
 
-          <div className="home-booking-fields">
+          <form className="home-booking-fields" onSubmit={handleFindCar}>
 
             <div className="home-booking-field">
 
               <label>Choose Car</label>
 
-              <select defaultValue="">
-                <option value="" disabled>
-                  Select Vehicle
-                </option>
+              <select
+                value={selectedCarId}
+                onChange={(e) => setSelectedCarId(e.target.value)}
+                required
+              >
+                <option value="">Select Vehicle</option>
 
-                {cars.map((car) => (
-                  <option
-                    key={car.id}
-                    value={car.id}
-                  >
-                    {car.brand} {car.model}
-                  </option>
-                ))}
+                {cars.map((car) => {
+                  // 🔥 سعر شامل (عربية + سواق)
+                  const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+                  return (
+                    <option key={car.id} value={car.id}>
+                      {car.brand} {car.model} — {totalPerDay.toLocaleString()} EGP/day (Car + Driver)
+                    </option>
+                  );
+                })}
               </select>
 
             </div>
@@ -145,7 +176,12 @@ function Home() {
 
               <label>Pick Up</label>
 
-              <input type="datetime-local" />
+              <input
+                type="datetime-local"
+                value={pickupAt}
+                onChange={(e) => setPickupAt(e.target.value)}
+                required
+              />
 
             </div>
 
@@ -153,18 +189,20 @@ function Home() {
 
               <label>Return</label>
 
-              <input type="datetime-local" />
+              <input
+                type="datetime-local"
+                value={returnAt}
+                onChange={(e) => setReturnAt(e.target.value)}
+                required
+              />
 
             </div>
 
-            <Link
-              to="/cars"
-              className="home-booking-button"
-            >
+            <button type="submit" className="home-booking-button">
               Find A Car
-            </Link>
+            </button>
 
-          </div>
+          </form>
 
         </div>
 
@@ -249,7 +287,7 @@ function Home() {
 
         <div className="home-section-heading center">
 
-          <span className="home-section-label">
+          <span className="home-section-label center">
             OUR SERVICES
           </span>
 
@@ -263,6 +301,7 @@ function Home() {
 
         <div className="home-services-grid">
 
+          {/* Car Rental → /cars */}
           <div className="home-service-card">
 
             <span className="service-number">01</span>
@@ -282,6 +321,7 @@ function Home() {
 
           </div>
 
+          {/* Rental With Driver → /cars */}
           <div className="home-service-card">
 
             <span className="service-number">02</span>
@@ -301,6 +341,7 @@ function Home() {
 
           </div>
 
+          {/* Airport Transfer → /booking (Book Now) */}
           <div className="home-service-card">
 
             <span className="service-number">03</span>
@@ -314,12 +355,13 @@ function Home() {
               drop-offs and private transfers.
             </p>
 
-            <Link to="/contact">
-              Learn More →
+            <Link to="/booking" className="home-service-book">
+              Book Now →
             </Link>
 
           </div>
 
+          {/* Long Term Rental → /booking (Book Now) */}
           <div className="home-service-card">
 
             <span className="service-number">04</span>
@@ -333,8 +375,8 @@ function Home() {
               business trips and long journeys.
             </p>
 
-            <Link to="/contact">
-              Learn More →
+            <Link to="/booking" className="home-service-book">
+              Book Now →
             </Link>
 
           </div>
@@ -373,82 +415,84 @@ function Home() {
 
         <div className="home-fleet-grid">
 
-          {cars.map((car) => (
+          {cars.map((car) => {
+            // 🔥 سعر شامل (عربية + سواق)
+            const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
 
-            <article
-              className="home-car-card"
-              key={car.id}
-            >
+            return (
+              <article
+                className="home-car-card"
+                key={car.id}
+              >
 
-              <div className="home-car-image">
+                <div className="home-car-image">
 
-                {car.image_url ? (
-                  <img
-                    src={car.image_url}
-                    alt={`${car.brand} ${car.model}`}
-                  />
-                ) : (
-                  <div className="home-no-image">
-                    ROADEx
-                  </div>
-                )}
+                  {car.image_url ? (
+                    <img
+                      src={car.image_url}
+                      alt={`${car.brand} ${car.model}`}
+                    />
+                  ) : (
+                    <div className="home-no-image">
+                      ROADEX
+                    </div>
+                  )}
 
-                <span className="home-car-category">
-                  {car.category || 'Car Rental'}
-                </span>
-
-              </div>
-
-              <div className="home-car-content">
-
-                <span className="home-car-type">
-                  {car.car_type || 'Premium Vehicle'}
-                </span>
-
-                <h3>
-                  {car.brand} {car.model}
-                </h3>
-
-                <div className="home-car-info">
-
-                  <span>
-                    {car.year || '—'}
-                  </span>
-
-                  <span>•</span>
-
-                  <span>
-                    {car.car_type || 'Vehicle'}
+                  <span className="home-car-category">
+                    {car.category || 'Car Rental'}
                   </span>
 
                 </div>
 
-                <div className="home-car-bottom">
+                <div className="home-car-content">
 
-                  <div>
-                    <strong>
-                      {Number(
-                        car.price_per_day || 0
-                      ).toLocaleString()}
-                      {' '}EGP
-                    </strong>
+                  <span className="home-car-type">
+                    {car.car_type || 'Premium Vehicle'}
+                  </span>
 
-                    <small>/ DAY</small>
+                  <h3>
+                    {car.brand} {car.model}
+                  </h3>
+
+                  <div className="home-car-info">
+
+                    <span>
+                      {car.year || '—'}
+                    </span>
+
+                    <span>•</span>
+
+                    <span>
+                      {car.car_type || 'Vehicle'}
+                    </span>
+
                   </div>
 
-                  <Link
-                    to={`/cars/${car.id}`}
-                  >
-                    Details →
-                  </Link>
+                  <div className="home-car-bottom">
+
+                    <div>
+                      <strong>
+                        {totalPerDay.toLocaleString()} EGP
+                      </strong>
+                      <small>/ DAY</small>
+                      <small style={{ color: '#888', fontSize: '9px', display: 'block' }}>
+                        (Car + Driver)
+                      </small>
+                    </div>
+
+                    <Link
+                      to={`/car/${car.id}`}
+                    >
+                      Details →
+                    </Link>
+
+                  </div>
 
                 </div>
 
-              </div>
-
-            </article>
-
-          ))}
+              </article>
+            );
+          })}
 
         </div>
 
@@ -461,7 +505,7 @@ function Home() {
 
         <div className="home-section-heading center">
 
-          <span className="home-section-label">
+          <span className="home-section-label center">
             FIND YOUR PERFECT CAR
           </span>
 
@@ -478,7 +522,7 @@ function Home() {
           {categories.map((category) => (
 
             <Link
-              to="/cars"
+              to={category.link}
               className="home-category-card"
               key={category.number}
             >
@@ -518,7 +562,7 @@ function Home() {
 
         <div className="home-section-heading center">
 
-          <span className="home-section-label">
+          <span className="home-section-label center">
             EASY & SIMPLE
           </span>
 

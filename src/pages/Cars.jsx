@@ -68,27 +68,19 @@ function Cars() {
 
       {/* Header */}
       <div className="cars-header">
-        <h1>Our Cars</h1>
-
-        <p>
-          Choose the perfect car for your journey
-        </p>
+        <h1>Our Fleets</h1>
+        <p>Choose the perfect car for your journey</p>
       </div>
 
       {/* Categories */}
       <div className="cars-filter-section">
         <h3>Categories</h3>
-
         <div className="cars-filters">
           {categories.map((category) => (
             <button
               key={category}
               type="button"
-              className={
-                selectedCategory === category
-                  ? 'active'
-                  : ''
-              }
+              className={selectedCategory === category ? 'active' : ''}
               onClick={() => {
                 setSelectedCategory(category);
                 setSelectedType('All');
@@ -103,17 +95,12 @@ function Cars() {
       {/* Car Types */}
       <div className="cars-filter-section">
         <h3>Car Type</h3>
-
         <div className="cars-filters">
           {carTypes.map((type) => (
             <button
               key={type}
               type="button"
-              className={
-                selectedType === type
-                  ? 'active'
-                  : ''
-              }
+              className={selectedType === type ? 'active' : ''}
               onClick={() => setSelectedType(type)}
             >
               {type}
@@ -125,116 +112,74 @@ function Cars() {
       {/* Cars */}
       <div className="cars-grid">
 
-        {loading && (
-          <p>Loading cars...</p>
-        )}
+        {loading && <p>Loading cars...</p>}
 
-        {!loading && message && (
-          <p>{message}</p>
+        {!loading && message && <p>{message}</p>}
+
+        {!loading && !message && filteredCars.length === 0 && (
+          <p>No cars found.</p>
         )}
 
         {!loading &&
-          !message &&
-          filteredCars.length === 0 && (
-            <p>No cars found.</p>
-          )}
+          filteredCars.map((car) => {
+            const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+            return (
+              <div className="car-card" key={car.id}>
 
-        {!loading &&
-          filteredCars.map((car) => (
-            <div
-              className="car-card"
-              key={car.id}
-            >
+                {/* Car Image */}
+                {car.image_url && (
+                  <img
+                    src={car.image_url}
+                    alt={`${car.brand} ${car.model}`}
+                    className="car-card-image"
+                    loading="lazy"
+                    width="400"
+                    height="225"
+                  />
+                )}
 
-              {/* Car Image */}
-              {car.image_url && (
-                <img
-                  src={car.image_url}
-                  alt={`${car.brand} ${car.model}`}
-                  className="car-card-image"
-                />
-              )}
+                <div className="car-card-content">
 
-              <div className="car-card-content">
-
-                {/* Car Name & Year */}
-                <div className="car-card-title">
-                  <h2>
-                    {car.brand} {car.model}
-                  </h2>
-
-                  <span>
-                    {car.year}
-                  </span>
-                </div>
-
-                {/* Category & Type */}
-                <div className="car-card-tags">
-
-                  {car.category && (
-                    <span>
-                      {car.category}
-                    </span>
-                  )}
-
-                  {car.car_type && (
-                    <span>
-                      {car.car_type}
-                    </span>
-                  )}
-
-                </div>
-
-                {/* Prices */}
-                <div className="car-prices">
-
-                  {/* Rental Price */}
-                  <div>
-                    <span>
-                      Rental Price
-                    </span>
-
-                    <strong>
-                      {car.price_per_day} EGP
-                      <small>/day</small>
-                    </strong>
+                  {/* Car Name & Year */}
+                  <div className="car-card-title">
+                    <h2>{car.brand} {car.model}</h2>
+                    <span>{car.year}</span>
                   </div>
 
-                  {/* Driver Price */}
-                  <div>
-                    <span>
-                      With Driver
-                    </span>
+                  {/* Category & Type */}
+                  <div className="car-card-tags">
+                    {car.category && <span>{car.category}</span>}
+                    {car.car_type && <span>{car.car_type}</span>}
+                  </div>
 
-                    <strong>
-                      {car.driver_price_per_day != null
-                        ? `${car.driver_price_per_day} EGP`
-                        : 'Not available'}
-
-                      {car.driver_price_per_day != null && (
+                  {/* 🔥 Price شامل (Car + Driver + Fuel) */}
+                  <div className="car-prices">
+                    <div>
+                      <span>Price Per Day</span>
+                      <strong>
+                        {totalPerDay.toLocaleString()} EGP
                         <small>/day</small>
-                      )}
-                    </strong>
+                        <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>
+                          (Car + Driver + Fuel Included)
+                        </small>
+                      </strong>
+                    </div>
                   </div>
 
+                  {/* Available Quantity */}
+                  <div className="car-quantity">
+                    Available: {car.quantity}
+                  </div>
+
+                  {/* Car Details Button */}
+                  <a href={`/car/${car.id}`} className="car-button">
+                    Car Details
+                  </a>
+
                 </div>
-
-                {/* Available Quantity */}
-                <div className="car-quantity">
-                  Available: {car.quantity}
-                </div>
-
-                {/* Car Details Button */}
-                <a
-                  href={`/car/${car.id}`}
-                  className="car-button"
-                >
-                  Car Details
-                </a>
-
               </div>
-            </div>
-          ))}
+            );
+          })}
 
       </div>
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabase';
+import { FaEnvelope, FaLock } from 'react-icons/fa';
 import './Login.css';
 
 function Login() {
@@ -34,72 +35,60 @@ function Login() {
     <div className="login-page">
       <div className="login-card">
 
-        <div className="login-header">
-          <h1>Welcome Back</h1>
-
-          <p>
-            Login to your Roadex account to manage your bookings.
-          </p>
+        <div className="login-logo">
+          <h1>Welcome <span>Back</span></h1>
+          <p>Sign in to your Roadex account</p>
         </div>
 
-        <form
-          className="login-form"
-          onSubmit={handleLogin}
-        >
+        <div className="login-divider">
+          <span>Sign in</span>
+        </div>
+
+        <form className="login-form" onSubmit={handleLogin}>
 
           <div className="login-field">
-            <label htmlFor="login-email">
-              Email Address
-            </label>
-
-            <input
-              id="login-email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-              autoComplete="email"
-              required
-            />
+            <label htmlFor="login-email">Email Address</label>
+            <div className="input-wrapper">
+              <input
+                id="login-email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+              <FaEnvelope className="input-icon" />
+            </div>
           </div>
 
           <div className="login-field">
-            <label htmlFor="login-password">
-              Password
-            </label>
-
-            <input
-              id="login-password"
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              autoComplete="current-password"
-              required
-            />
+            <label htmlFor="login-password">Password</label>
+            <div className="input-wrapper">
+              <input
+                id="login-password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+              <FaLock className="input-icon" />
+            </div>
           </div>
 
           <div className="login-options">
-            <Link
-              to="/forgot-password"
-              className="forgot-password-link"
-            >
+            <label className="remember-me">
+              <input type="checkbox" /> Remember me
+            </label>
+            <Link to="/forgot-password" className="forgot-password-link">
               Forgot Password?
             </Link>
           </div>
 
-          <button
-            type="submit"
-            className="login-button"
-            disabled={loading}
-          >
-            {loading
-              ? 'Logging in...'
-              : 'Login'}
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Logging in...' : 'Sign In'}
           </button>
 
         </form>
@@ -111,13 +100,8 @@ function Login() {
         )}
 
         <div className="login-register">
-          <span>
-            Don't have an account?
-          </span>
-
-          <Link to="/register">
-            Create Account
-          </Link>
+          <span>Don't have an account?</span>
+          <Link to="/register">Create Account</Link>
         </div>
 
       </div>

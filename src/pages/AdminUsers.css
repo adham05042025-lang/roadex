@@ -1,107 +1,374 @@
+/* ============================================ */
+/* ===== ADMIN USERS PAGE ===== */
+/* ============================================ */
+
 .admin-users-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 50px 20px 70px;
+  width: 100%;
+  min-height: calc(100vh - 80px);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  padding: 40px 20px 80px;
+  transition: background 0.4s ease, color 0.4s ease;
 }
 
+/* ===== Header ===== */
 .admin-users-header {
-  margin-bottom: 30px;
+  max-width: 1200px;
+  margin: 0 auto 32px;
+  text-align: center;
 }
 
 .admin-users-header h1 {
-  margin: 0 0 8px;
-  color: #ffd700;
-  font-size: 36px;
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--text-primary);
+  transition: color 0.4s ease;
+}
+
+.admin-users-header h1 span {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .admin-users-header p {
-  margin: 0;
-  color: #999;
+  color: var(--text-secondary);
+  font-size: 16px;
+  transition: color 0.4s ease;
 }
 
+/* ===== Stats Bar ===== */
+.admin-users-stats {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  transition: all 0.4s ease;
+}
+
+.stat-card:hover {
+  border-color: var(--gold);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-light);
+}
+
+.stat-card .stat-number {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--gold-light);
+  line-height: 1.2;
+}
+
+.stat-card .stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+  font-weight: 600;
+  transition: color 0.4s ease;
+}
+
+/* ===== Message ===== */
 .admin-users-message {
-  margin-bottom: 20px;
-  padding: 12px 15px;
-
-  background: #151515;
-  border: 1px solid #333;
+  max-width: 1200px;
+  margin: 0 auto 20px;
+  padding: 14px 20px;
   border-radius: 8px;
-
-  color: #ddd;
+  font-size: 14px;
+  text-align: center;
 }
+
+.admin-users-message.success {
+  background: rgba(0, 204, 68, 0.06);
+  border: 1px solid #00cc44;
+  color: #00cc44;
+}
+
+.admin-users-message.error {
+  background: rgba(255, 68, 68, 0.06);
+  border: 1px solid #ff4444;
+  color: #ff4444;
+}
+
+/* ===== Loading ===== */
+.admin-users-loading {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  font-size: 18px;
+  transition: color 0.4s ease;
+}
+
+/* ===== Empty ===== */
+.admin-users-empty {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+  font-size: 18px;
+  transition: color 0.4s ease;
+}
+
+/* ============================================ */
+/* ===== USERS LIST ===== */
+/* ============================================ */
 
 .admin-users-list {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
+/* ============================================ */
+/* ===== USER CARD ===== */
+/* ============================================ */
+
 .admin-user-card {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 25px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 20px 24px;
+  transition: all 0.4s ease;
+  gap: 20px;
+  flex-wrap: wrap;
+}
 
-  padding: 22px;
+.admin-user-card:hover {
+  border-color: var(--gold);
+  box-shadow: var(--shadow-light);
+  transform: translateY(-2px);
+}
 
-  background: #111;
-  border: 1px solid #292929;
-  border-radius: 14px;
+/* ===== User Info ===== */
+.admin-user-info {
+  flex: 1;
+  min-width: 220px;
 }
 
 .admin-user-info h2 {
-  margin: 0 0 12px;
-  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  transition: color 0.4s ease;
+}
+
+.admin-user-info h2 .user-id {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 8px;
 }
 
 .admin-user-info p {
-  margin: 6px 0;
-  color: #aaa;
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 3px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  transition: color 0.4s ease;
 }
 
-.admin-user-info strong {
-  color: #ddd;
+.admin-user-info p strong {
+  color: var(--text-primary);
+  font-weight: 600;
+  min-width: 60px;
+  transition: color 0.4s ease;
 }
 
+/* ===== Email ===== */
+.user-email {
+  color: var(--gold-light);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* ===== Role Badge ===== */
 .user-role {
-  text-transform: capitalize;
+  display: inline-block;
+  padding: 3px 14px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 700;
-}
-
-.user-role.admin {
-  color: #ffd700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .user-role.user {
-  color: #7db7ff;
+  background: rgba(33, 150, 243, 0.12);
+  color: #64b5f6;
+  border: 1px solid rgba(33, 150, 243, 0.2);
+}
+
+.user-role.admin {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--gold-light);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+/* ============================================ */
+/* ===== USER ACTIONS ===== */
+/* ============================================ */
+
+.admin-user-actions {
+  display: flex;
+  align-items: center;
+  min-width: 140px;
 }
 
 .admin-user-actions label {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-
-  color: #aaa;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: 100%;
+  transition: color 0.4s ease;
 }
 
 .admin-user-actions select {
-  min-width: 140px;
-  padding: 10px;
-
-  background: #181818;
-  color: #fff;
-
-  border: 1px solid #444;
-  border-radius: 7px;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
 }
 
-@media (max-width: 650px) {
+.admin-user-actions select:focus {
+  border-color: var(--gold);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.admin-user-actions select:hover {
+  border-color: var(--gold);
+}
+
+.admin-user-actions select option {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* ============================================ */
+/* ===== RESPONSIVE ===== */
+/* ============================================ */
+
+@media (max-width: 768px) {
+  .admin-users-page {
+    padding: 20px 16px 60px;
+  }
+
+  .admin-users-header h1 {
+    font-size: 28px;
+  }
+
+  .admin-users-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card .stat-number {
+    font-size: 24px;
+  }
+
   .admin-user-card {
     flex-direction: column;
     align-items: stretch;
+    padding: 16px 18px;
+    gap: 14px;
+  }
+
+  .admin-user-info h2 {
+    font-size: 16px;
+  }
+
+  .admin-user-info p {
+    font-size: 13px;
+  }
+
+  .admin-user-info p strong {
+    min-width: 50px;
+  }
+
+  .admin-user-actions {
+    min-width: unset;
+    width: 100%;
   }
 
   .admin-user-actions select {
-    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-users-header h1 {
+    font-size: 24px;
+  }
+
+  .admin-users-stats {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 12px 10px;
+  }
+
+  .stat-card .stat-number {
+    font-size: 20px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 10px;
+  }
+
+  .admin-user-card {
+    padding: 14px;
+  }
+
+  .admin-user-info p {
+    font-size: 12px;
+  }
+
+  .user-email {
+    font-size: 12px;
+    word-break: break-all;
   }
 }
