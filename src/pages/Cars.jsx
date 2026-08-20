@@ -68,7 +68,7 @@ function Cars() {
 
       {/* Header */}
       <div className="cars-header">
-        <h1>Our Fleets</h1>
+        <h1>Our Vehicles</h1>
         <p>Choose the perfect car for your journey</p>
       </div>
 
