@@ -102,6 +102,7 @@ function Admin() {
           return_at,
           status,
           total_price,
+          deposit_paid,
           cars (
             brand,
             model
@@ -118,6 +119,7 @@ function Admin() {
       (booking) => booking.status === 'pending'
     ).length;
 
+    // 🔥 Revenue = مجموع الـ total_price للحجوزات المؤكدة والمكتملة
     const revenue = bookingRows
       .filter(
         (booking) =>
@@ -146,15 +148,11 @@ function Admin() {
       'Are you sure you want to delete all completed and cancelled bookings?\n\nThis action cannot be undone.'
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
     setClearing(true);
 
-    const { data, error } = await supabase.rpc(
-      'clear_old_booking_data'
-    );
+    const { data, error } = await supabase.rpc('clear_old_booking_data');
 
     if (error) {
       alert(`Could not clear old data: ${error.message}`);
@@ -162,12 +160,8 @@ function Admin() {
       return;
     }
 
-    alert(
-      `${data || 0} old booking(s) deleted successfully.`
-    );
-
+    alert(`${data || 0} old booking(s) deleted successfully.`);
     await loadDashboardData();
-
     setClearing(false);
   };
 
@@ -175,20 +169,14 @@ function Admin() {
     const grouped = {};
 
     bookings.forEach((booking) => {
-      const date = new Date(
-        booking.created_at
-      ).toLocaleDateString();
-
-      grouped[date] =
-        (grouped[date] || 0) + 1;
+      const date = new Date(booking.created_at).toLocaleDateString();
+      grouped[date] = (grouped[date] || 0) + 1;
     });
 
-    return Object.entries(grouped).map(
-      ([date, count]) => ({
-        date,
-        bookings: count,
-      })
-    );
+    return Object.entries(grouped).map(([date, count]) => ({
+      date,
+      bookings: count,
+    }));
   }, [bookings]);
 
   const statusData = useMemo(() => {
@@ -221,8 +209,7 @@ function Admin() {
         ? `${booking.cars.brand} ${booking.cars.model}`
         : 'Unknown';
 
-      grouped[carName] =
-        (grouped[carName] || 0) + 1;
+      grouped[carName] = (grouped[carName] || 0) + 1;
     });
 
     return Object.entries(grouped)
@@ -230,36 +217,22 @@ function Admin() {
         car,
         bookings: count,
       }))
-      .sort(
-        (a, b) =>
-          b.bookings - a.bookings
-      )
+      .sort((a, b) => b.bookings - a.bookings)
       .slice(0, 5);
   }, [bookings]);
 
   const recentBookings = useMemo(() => {
     return [...bookings]
-      .sort(
-        (a, b) =>
-          new Date(b.created_at) -
-          new Date(a.created_at)
-      )
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
       .slice(0, 5);
   }, [bookings]);
 
-  const pieColors = [
-    '#FFD700',
-    '#65D46E',
-    '#5FA8FF',
-    '#FF6B6B',
-  ];
+  const pieColors = ['#FFD700', '#65D46E', '#5FA8FF', '#FF6B6B'];
 
   if (loading) {
     return (
       <div className="admin-page">
-        <div className="admin-loading">
-          Loading dashboard...
-        </div>
+        <div className="admin-loading">Loading dashboard...</div>
       </div>
     );
   }
@@ -275,10 +248,7 @@ function Admin() {
               ? 'Super Admin Dashboard'
               : 'Admin Dashboard'}
           </h1>
-
-          <p>
-            Roadex analytics and full management.
-          </p>
+          <p>Roadex analytics and full management.</p>
         </div>
 
         <div className="admin-header-actions">
@@ -297,9 +267,7 @@ function Admin() {
             onClick={clearOldData}
             disabled={clearing}
           >
-            {clearing
-              ? 'Clearing...'
-              : 'Clear Old Data'}
+            {clearing ? 'Clearing...' : 'Clear Old Data'}
           </button>
 
         </div>
@@ -310,43 +278,27 @@ function Admin() {
 
         <div className="admin-stat-card">
           <span>Total Users</span>
-
-          <strong>
-            {stats.users}
-          </strong>
+          <strong>{stats.users}</strong>
         </div>
 
         <div className="admin-stat-card">
           <span>Total Cars</span>
-
-          <strong>
-            {stats.cars}
-          </strong>
+          <strong>{stats.cars}</strong>
         </div>
 
         <div className="admin-stat-card">
           <span>Total Bookings</span>
-
-          <strong>
-            {stats.bookings}
-          </strong>
+          <strong>{stats.bookings}</strong>
         </div>
 
         <div className="admin-stat-card">
           <span>Pending Bookings</span>
-
-          <strong>
-            {stats.pendingBookings}
-          </strong>
+          <strong>{stats.pendingBookings}</strong>
         </div>
 
         <div className="admin-stat-card revenue-card">
           <span>Revenue</span>
-
-          <strong>
-            {stats.revenue.toLocaleString()}
-          </strong>
-
+          <strong>{stats.revenue.toLocaleString()}</strong>
           <small>EGP</small>
         </div>
 
@@ -357,72 +309,32 @@ function Admin() {
         <div className="admin-chart-card">
 
           <div className="admin-chart-header">
-            <h2>
-              Bookings Over Time
-            </h2>
-
-            <span>
-              Booking activity
-            </span>
+            <h2>Bookings Over Time</h2>
+            <span>Booking activity</span>
           </div>
 
           {bookingsOverTime.length > 0 ? (
-            <ResponsiveContainer
-              width="100%"
-              height={260}
-            >
+            <ResponsiveContainer width="100%" height={260}>
               <LineChart
                 data={bookingsOverTime}
-                margin={{
-                  top: 10,
-                  right: 20,
-                  left: -15,
-                  bottom: 5,
-                }}
+                margin={{ top: 10, right: 20, left: -15, bottom: 5 }}
               >
-
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#2b2b2b"
-                />
-
-                <XAxis
-                  dataKey="date"
-                  tick={{
-                    fill: '#999',
-                    fontSize: 12,
-                  }}
-                />
-
-                <YAxis
-                  allowDecimals={false}
-                  tick={{
-                    fill: '#999',
-                    fontSize: 12,
-                  }}
-                />
-
+                <CartesianGrid strokeDasharray="3 3" stroke="#2b2b2b" />
+                <XAxis dataKey="date" tick={{ fill: '#999', fontSize: 12 }} />
+                <YAxis allowDecimals={false} tick={{ fill: '#999', fontSize: 12 }} />
                 <Tooltip />
-
                 <Line
                   type="monotone"
                   dataKey="bookings"
                   stroke="#FFD700"
                   strokeWidth={3}
-                  dot={{
-                    fill: '#FFD700',
-                  }}
-                  activeDot={{
-                    r: 6,
-                  }}
+                  dot={{ fill: '#FFD700' }}
+                  activeDot={{ r: 6 }}
                 />
-
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="chart-empty">
-              No booking data yet.
-            </div>
+            <div className="chart-empty">No booking data yet.</div>
           )}
 
         </div>
@@ -430,70 +342,25 @@ function Admin() {
         <div className="admin-chart-card">
 
           <div className="admin-chart-header">
-            <h2>
-              Most Booked Cars
-            </h2>
-
-            <span>
-              Top 5 vehicles
-            </span>
+            <h2>Most Booked Cars</h2>
+            <span>Top 5 vehicles</span>
           </div>
 
           {mostBookedCars.length > 0 ? (
-            <ResponsiveContainer
-              width="100%"
-              height={260}
-            >
+            <ResponsiveContainer width="100%" height={260}>
               <BarChart
                 data={mostBookedCars}
-                margin={{
-                  top: 10,
-                  right: 15,
-                  left: -15,
-                  bottom: 15,
-                }}
+                margin={{ top: 10, right: 15, left: -15, bottom: 15 }}
               >
-
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#2b2b2b"
-                />
-
-                <XAxis
-                  dataKey="car"
-                  tick={{
-                    fill: '#999',
-                    fontSize: 11,
-                  }}
-                />
-
-                <YAxis
-                  allowDecimals={false}
-                  tick={{
-                    fill: '#999',
-                    fontSize: 12,
-                  }}
-                />
-
+                <CartesianGrid strokeDasharray="3 3" stroke="#2b2b2b" />
+                <XAxis dataKey="car" tick={{ fill: '#999', fontSize: 11 }} />
+                <YAxis allowDecimals={false} tick={{ fill: '#999', fontSize: 12 }} />
                 <Tooltip />
-
-                <Bar
-                  dataKey="bookings"
-                  fill="#FFD700"
-                  radius={[
-                    6,
-                    6,
-                    0,
-                    0,
-                  ]}
-                />
-
+                <Bar dataKey="bookings" fill="#FFD700" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="chart-empty">
-              No booking data yet.
-            </div>
+            <div className="chart-empty">No booking data yet.</div>
           )}
 
         </div>
@@ -501,24 +368,13 @@ function Admin() {
         <div className="admin-chart-card admin-status-chart">
 
           <div className="admin-chart-header">
-
-            <h2>
-              Booking Status
-            </h2>
-
-            <span>
-              Current booking distribution
-            </span>
-
+            <h2>Booking Status</h2>
+            <span>Current booking distribution</span>
           </div>
 
           {statusData.length > 0 ? (
-            <ResponsiveContainer
-              width="100%"
-              height={250}
-            >
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
-
                 <Pie
                   data={statusData}
                   dataKey="count"
@@ -530,36 +386,19 @@ function Admin() {
                   paddingAngle={3}
                   labelLine={false}
                 >
-
-                  {statusData.map(
-                    (entry, index) => (
-                      <Cell
-                        key={entry.status}
-                        fill={
-                          pieColors[
-                            index %
-                              pieColors.length
-                          ]
-                        }
-                      />
-                    )
-                  )}
-
+                  {statusData.map((entry, index) => (
+                    <Cell
+                      key={entry.status}
+                      fill={pieColors[index % pieColors.length]}
+                    />
+                  ))}
                 </Pie>
-
                 <Tooltip />
-
-                <Legend
-                  verticalAlign="bottom"
-                  height={35}
-                />
-
+                <Legend verticalAlign="bottom" height={35} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="chart-empty">
-              No booking status data yet.
-            </div>
+            <div className="chart-empty">No booking status data yet.</div>
           )}
 
         </div>
@@ -567,151 +406,59 @@ function Admin() {
       </div>
 
       <div className="admin-section-title">
-
         <div>
-          <h2>
-            Management
-          </h2>
-
-          <p>
-            Manage the main Roadex system.
-          </p>
+          <h2>Management</h2>
+          <p>Manage the main Roadex system.</p>
         </div>
-
       </div>
 
       <div className="admin-management">
 
         <div className="admin-management-card">
-
-          <div className="management-icon">
-            🚘
-          </div>
-
-          <h2>
-            Cars
-          </h2>
-
-          <p>
-            Add new vehicles, update details,
-            change quantity and manage car images.
-          </p>
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate('/admin/cars')
-            }
-          >
+          <div className="management-icon">🚘</div>
+          <h2>Cars</h2>
+          <p>Add new vehicles, update details, change quantity and manage car images.</p>
+          <button type="button" onClick={() => navigate('/admin/cars')}>
             Manage Cars
           </button>
-
         </div>
 
         <div className="admin-management-card">
-
-          <div className="management-icon">
-            📅
-          </div>
-
-          <h2>
-            Bookings
-          </h2>
-
-          <p>
-            Review reservations, accept requests,
-            refuse bookings and mark rentals as completed.
-          </p>
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate('/admin/bookings')
-            }
-          >
+          <div className="management-icon">📅</div>
+          <h2>Bookings</h2>
+          <p>Review reservations, accept requests, refuse bookings and mark rentals as completed.</p>
+          <button type="button" onClick={() => navigate('/admin/bookings')}>
             Manage Bookings
           </button>
-
         </div>
 
         {role === 'super_admin' && (
           <div className="admin-management-card">
-
-            <div className="management-icon">
-              👤
-            </div>
-
-            <h2>
-              Users and Roles
-            </h2>
-
-            <p>
-              View staff accounts and manage
-              user roles.
-            </p>
-
-            <button
-              type="button"
-              onClick={() =>
-                navigate('/admin/users')
-              }
-            >
+            <div className="management-icon">👤</div>
+            <h2>Users and Roles</h2>
+            <p>View staff accounts and manage user roles.</p>
+            <button type="button" onClick={() => navigate('/admin/users')}>
               Manage Roles
             </button>
-
           </div>
         )}
 
         <div className="admin-management-card">
-
-          <div className="management-icon">
-            👥
-          </div>
-
-          <h2>
-            Manage Customers
-          </h2>
-
-          <p>
-            Create new customer accounts and
-            remove existing customer accounts.
-          </p>
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate('/admin/manage-users')
-            }
-          >
+          <div className="management-icon">👥</div>
+          <h2>Manage Customers</h2>
+          <p>Create new customer accounts and remove existing customer accounts.</p>
+          <button type="button" onClick={() => navigate('/admin/manage-users')}>
             Manage Customers
           </button>
-
         </div>
 
         <div className="admin-management-card">
-
-          <div className="management-icon">
-            ➕
-          </div>
-
-          <h2>
-            Add Booking
-          </h2>
-
-          <p>
-            Create a new car reservation for an
-            existing customer.
-          </p>
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate('/admin/add-booking')
-            }
-          >
+          <div className="management-icon">➕</div>
+          <h2>Add Booking</h2>
+          <p>Create a new car reservation for an existing customer.</p>
+          <button type="button" onClick={() => navigate('/admin/add-booking')}>
             Add Booking
           </button>
-
         </div>
 
       </div>
@@ -719,74 +466,35 @@ function Admin() {
       <div className="admin-recent-section">
 
         <div className="admin-section-title">
-
           <div>
-            <h2>
-              Recent Bookings
-            </h2>
-
-            <p>
-              Latest booking activity.
-            </p>
+            <h2>Recent Bookings</h2>
+            <p>Latest booking activity.</p>
           </div>
-
-          <button
-            type="button"
-            className="view-all-button"
-            onClick={() =>
-              navigate('/admin/bookings')
-            }
-          >
+          <button type="button" className="view-all-button" onClick={() => navigate('/admin/bookings')}>
             View All
           </button>
-
         </div>
 
         {recentBookings.length === 0 ? (
-          <div className="recent-empty">
-            No bookings yet.
-          </div>
+          <div className="recent-empty">No bookings yet.</div>
         ) : (
           <div className="recent-bookings-list">
-
-            {recentBookings.map(
-              (booking) => (
-                <div
-                  className="recent-booking-row"
-                  key={booking.id}
-                >
-
-                  <div>
-                    <strong>
-                      {booking.cars
-                        ? `${booking.cars.brand} ${booking.cars.model}`
-                        : 'Unknown Car'}
-                    </strong>
-
-                    <span>
-                      {new Date(
-                        booking.created_at
-                      ).toLocaleString()}
-                    </span>
-                  </div>
-
-                  <span
-                    className={`dashboard-status ${booking.status}`}
-                  >
-                    {booking.status}
-                  </span>
-
+            {recentBookings.map((booking) => (
+              <div className="recent-booking-row" key={booking.id}>
+                <div>
                   <strong>
-                    {Number(
-                      booking.total_price
-                    ).toLocaleString()}{' '}
-                    EGP
+                    {booking.cars
+                      ? `${booking.cars.brand} ${booking.cars.model}`
+                      : 'Unknown Car'}
                   </strong>
-
+                  <span>{new Date(booking.created_at).toLocaleString()}</span>
                 </div>
-              )
-            )}
-
+                <span className={`dashboard-status ${booking.status}`}>
+                  {booking.status}
+                </span>
+                <strong>{Number(booking.total_price).toLocaleString()} EGP</strong>
+              </div>
+            ))}
           </div>
         )}
 

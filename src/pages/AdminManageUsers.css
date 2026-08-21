@@ -1,10 +1,14 @@
-/* ===== Admin Manage Users Page ===== */
+/* ============================================ */
+/* ===== ADMIN MANAGE USERS PAGE ===== */
+/* ============================================ */
+
 .admin-users-page {
   width: 100%;
   min-height: calc(100vh - 80px);
-  background: var(--bg-dark);
-  color: var(--text-white);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   padding: 40px 20px 80px;
+  transition: background 0.4s ease, color 0.4s ease;
 }
 
 /* ===== Header ===== */
@@ -22,6 +26,8 @@
   font-size: clamp(28px, 3.5vw, 40px);
   font-weight: 800;
   letter-spacing: -1px;
+  color: var(--text-primary);
+  transition: color 0.4s ease;
 }
 
 .admin-users-header h1 span {
@@ -32,22 +38,23 @@
 }
 
 .admin-users-header p {
-  color: var(--text-gray);
+  color: var(--text-secondary);
   font-size: 15px;
   margin-top: 4px;
+  transition: color 0.4s ease;
 }
 
 /* ===== Refresh Button ===== */
 .admin-users-refresh {
   padding: 10px 24px;
-  background: transparent;
-  border: 1px solid var(--border-dark);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  color: var(--text-white);
+  color: var(--text-primary);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.3s ease;
   font-family: 'Montserrat', sans-serif;
 }
 
@@ -84,7 +91,10 @@
   color: #ff4444;
 }
 
-/* ===== Layout ===== */
+/* ============================================ */
+/* ===== LAYOUT ===== */
+/* ============================================ */
+
 .admin-users-layout {
   max-width: 1200px;
   margin: 0 auto;
@@ -94,13 +104,16 @@
   align-items: start;
 }
 
-/* ===== Card ===== */
+/* ============================================ */
+/* ===== CARD ===== */
+/* ============================================ */
+
 .admin-users-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-dark);
-  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
   padding: 28px 32px;
-  transition: var(--transition);
+  transition: all 0.4s ease;
 }
 
 .admin-users-card:hover {
@@ -110,13 +123,17 @@
 .admin-users-card h2 {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-white);
+  color: var(--text-primary);
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-dark);
+  border-bottom: 1px solid var(--border-color);
+  transition: color 0.4s ease, border-color 0.4s ease;
 }
 
-/* ===== Form ===== */
+/* ============================================ */
+/* ===== FORM ===== */
+/* ============================================ */
+
 .admin-users-form {
   display: flex;
   flex-direction: column;
@@ -130,26 +147,27 @@
 }
 
 .admin-users-field label {
-  color: var(--text-gray);
+  color: var(--text-secondary);
   font-size: 13px;
   font-weight: 600;
+  transition: color 0.4s ease;
 }
 
 .admin-users-field input {
   width: 100%;
   padding: 12px 16px;
-  background: #1a1a1a;
-  border: 1px solid var(--border-dark);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  color: var(--text-white);
+  color: var(--text-primary);
   font-family: 'Montserrat', sans-serif;
   font-size: 15px;
-  transition: var(--transition);
+  transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
 .admin-users-field input::placeholder {
-  color: var(--text-gray);
+  color: var(--text-muted);
 }
 
 .admin-users-field input:focus {
@@ -158,7 +176,10 @@
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
 }
 
-/* ===== Create Button ===== */
+/* ============================================ */
+/* ===== CREATE BUTTON ===== */
+/* ============================================ */
+
 .admin-users-create-button {
   width: 100%;
   padding: 14px;
@@ -169,23 +190,26 @@
   font-size: 16px;
   font-weight: 800;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.3s ease;
   font-family: 'Montserrat', sans-serif;
   margin-top: 4px;
 }
 
 .admin-users-create-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-gold);
+  box-shadow: var(--gold-glow);
   opacity: 0.9;
 }
 
 .admin-users-create-button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* ===== List Header ===== */
+/* ============================================ */
+/* ===== LIST HEADER ===== */
+/* ============================================ */
+
 .admin-users-list-header {
   display: flex;
   justify-content: space-between;
@@ -200,24 +224,32 @@
 }
 
 .admin-users-list-header span {
-  color: var(--text-gray);
+  color: var(--text-muted);
   font-size: 14px;
   font-weight: 600;
-  background: #1a1a1a;
+  background: var(--bg-input);
   padding: 4px 14px;
   border-radius: 20px;
-  border: 1px solid var(--border-dark);
+  border: 1px solid var(--border-color);
+  transition: all 0.4s ease;
 }
 
-/* ===== Empty ===== */
+/* ============================================ */
+/* ===== EMPTY ===== */
+/* ============================================ */
+
 .admin-users-empty {
   text-align: center;
   padding: 40px 20px;
-  color: var(--text-gray);
+  color: var(--text-secondary);
   font-size: 16px;
+  transition: color 0.4s ease;
 }
 
-/* ===== Users List ===== */
+/* ============================================ */
+/* ===== USERS LIST ===== */
+/* ============================================ */
+
 .admin-users-list {
   display: flex;
   flex-direction: column;
@@ -232,7 +264,7 @@
 }
 
 .admin-users-list::-webkit-scrollbar-track {
-  background: var(--bg-dark);
+  background: var(--bg-primary);
   border-radius: 4px;
 }
 
@@ -241,16 +273,19 @@
   border-radius: 4px;
 }
 
-/* ===== User Row ===== */
+/* ============================================ */
+/* ===== USER ROW ===== */
+/* ============================================ */
+
 .admin-users-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #1a1a1a;
-  border: 1px solid var(--border-dark);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 14px 18px;
-  transition: var(--transition);
+  transition: all 0.3s ease;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -268,32 +303,64 @@
 }
 
 .admin-users-information strong {
-  color: var(--text-white);
+  color: var(--text-primary);
   font-size: 15px;
+  transition: color 0.4s ease;
 }
 
 .admin-users-information span {
-  color: var(--text-gray);
+  color: var(--text-secondary);
   font-size: 13px;
+  transition: color 0.4s ease;
 }
 
 .admin-users-information small {
-  color: var(--text-gray);
+  color: var(--text-muted);
   font-size: 11px;
   opacity: 0.7;
+  transition: color 0.4s ease;
+}
+
+/* ============================================ */
+/* ===== ACTIONS ===== */
+/* ============================================ */
+
+.admin-users-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ===== Documents Button ===== */
+.admin-users-docs-btn {
+  padding: 8px 16px;
+  background: var(--gold-gradient);
+  border: none;
+  border-radius: 6px;
+  color: #111;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.admin-users-docs-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--gold-glow);
 }
 
 /* ===== Delete Button ===== */
 .admin-users-delete-button {
   padding: 8px 18px;
   background: transparent;
-  border: 1px solid #ff4444;
+  border: 1px solid #ff4444 !important;
   border-radius: 6px;
   color: #ff4444;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.3s ease;
   font-family: 'Montserrat', sans-serif;
   white-space: nowrap;
 }
@@ -307,6 +374,305 @@
 .admin-users-delete-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ============================================ */
+/* ===== MODAL ===== */
+/* ============================================ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border: 1px solid var(--gold);
+  border-radius: 16px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 28px 32px;
+  box-shadow: 0 20px 60px var(--shadow-color);
+  transition: all 0.4s ease;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border-radius: 4px;
+}
+
+/* ===== Modal Header ===== */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 20px;
+  transition: border-color 0.4s ease;
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  transition: color 0.4s ease;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 28px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0 8px;
+}
+
+.modal-close:hover {
+  color: #ff4444;
+  transform: rotate(90deg);
+}
+
+/* ===== Modal Body ===== */
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== Upload Section ===== */
+.upload-section {
+  background: var(--bg-input);
+  border-radius: 12px;
+  padding: 20px;
+  transition: background 0.4s ease;
+}
+
+.upload-section h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  transition: color 0.4s ease;
+}
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 12px;
+}
+
+.doc-type-select {
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.doc-type-select:focus {
+  border-color: var(--gold);
+  outline: none;
+}
+
+.doc-type-select option {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.upload-grid input[type="file"] {
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-grid input[type="file"]::file-selector-button {
+  padding: 6px 16px;
+  background: var(--gold-gradient);
+  border: none;
+  border-radius: 6px;
+  color: #111;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  margin-right: 12px;
+}
+
+.upload-grid input[type="file"]::file-selector-button:hover {
+  opacity: 0.9;
+}
+
+.uploading-text {
+  color: var(--gold-light);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* ===== Documents List ===== */
+.docs-list h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  transition: color 0.4s ease;
+}
+
+.no-docs {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+  transition: color 0.4s ease;
+}
+
+.doc-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.doc-item:hover {
+  border-color: var(--gold);
+}
+
+.doc-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.doc-type {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold-light);
+  background: rgba(212, 175, 55, 0.1);
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.doc-name {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+  transition: color 0.4s ease;
+}
+
+.doc-size {
+  font-size: 11px;
+  color: var(--text-muted);
+  transition: color 0.4s ease;
+}
+
+.doc-status {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.doc-status.verified {
+  background: rgba(0, 204, 68, 0.1);
+  color: #00e676;
+}
+
+.doc-status.pending {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+/* ===== Document Actions ===== */
+.doc-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.doc-actions a,
+.doc-actions button {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
+  border: none;
+  text-decoration: none;
+}
+
+.doc-view-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.doc-view-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold-light);
+}
+
+.doc-verify-btn {
+  background: #00cc44;
+  color: #fff;
+}
+
+.doc-verify-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 204, 68, 0.35);
+}
+
+.doc-delete-btn {
+  background: transparent;
+  border: 1px solid #ff4444 !important;
+  color: #ff4444;
+}
+
+.doc-delete-btn:hover {
+  background: #ff4444;
+  color: #fff;
 }
 
 /* ============================================ */
@@ -357,6 +723,16 @@
     gap: 4px;
   }
 
+  .admin-users-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .admin-users-docs-btn {
+    width: 100%;
+    text-align: center;
+  }
+
   .admin-users-delete-button {
     width: 100%;
     text-align: center;
@@ -365,6 +741,30 @@
 
   .admin-users-list {
     max-height: 400px;
+  }
+
+  .modal-content {
+    padding: 20px;
+    max-width: 95%;
+  }
+
+  .upload-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .doc-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .doc-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .doc-actions {
+    justify-content: flex-start;
   }
 }
 
@@ -390,5 +790,119 @@
 
   .admin-users-information strong {
     font-size: 14px;
+  }
+
+  .modal-content {
+    padding: 16px;
+  }
+
+  .modal-header h2 {
+    font-size: 17px;
+  }
+
+  .doc-actions {
+    flex-wrap: wrap;
+  }
+}/* ============================================ */
+/* ===== PROGRESS BAR ===== */
+/* ============================================ */
+
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 8px 0;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-card);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--gold-gradient);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.progress-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-light);
+  min-width: 45px;
+  text-align: right;
+}
+
+.upload-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* ============================================ */
+/* ===== UPLOAD SECTION ===== */
+/* ============================================ */
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.upload-grid input[type="file"] {
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-grid input[type="file"]::file-selector-button {
+  padding: 8px 20px;
+  background: var(--gold-gradient);
+  border: none;
+  border-radius: 6px;
+  color: #111;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  margin-right: 14px;
+  transition: all 0.3s ease;
+}
+
+.upload-grid input[type="file"]::file-selector-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ============================================ */
+/* ===== RESPONSIVE ===== */
+/* ============================================ */
+
+@media (max-width: 768px) {
+  .upload-grid input[type="file"] {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .progress-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .progress-text {
+    text-align: center;
   }
 }
