@@ -32,6 +32,7 @@ function Admin() {
     cars: 0,
     bookings: 0,
     pendingBookings: 0,
+    expiredBookings: 0,
     revenue: 0,
   });
 
@@ -57,10 +58,7 @@ function Admin() {
 
     if (
       error ||
-      (
-        profile?.role !== 'admin' &&
-        profile?.role !== 'super_admin'
-      )
+      (profile?.role !== 'admin' && profile?.role !== 'super_admin')
     ) {
       navigate('/');
       return;
@@ -74,24 +72,16 @@ function Admin() {
   };
 
   const loadDashboardData = async () => {
-    const [
-      usersResult,
-      carsResult,
-      bookingsResult,
-    ] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('*', {
-          count: 'exact',
-          head: true,
-        }),
+    const [usersResult, carsResult, bookingsResult] = await Promise.all([
+      supabase.from('profiles').select('*', {
+        count: 'exact',
+        head: true,
+      }),
 
-      supabase
-        .from('cars')
-        .select('*', {
-          count: 'exact',
-          head: true,
-        }),
+      supabase.from('cars').select('*', {
+        count: 'exact',
+        head: true,
+      }),
 
       supabase
         .from('bookings')
@@ -119,18 +109,20 @@ function Admin() {
       (booking) => booking.status === 'pending'
     ).length;
 
-    // 🔥 Revenue = مجموع الـ total_price للحجوزات المؤكدة والمكتملة
+    // 🔥 حساب الحجوزات المنتهية
+    const now = new Date();
+    const expiredBookings = bookingRows.filter(
+      (booking) =>
+        (booking.status === 'pending' || booking.status === 'confirmed') &&
+        new Date(booking.return_at) < now
+    ).length;
+
     const revenue = bookingRows
       .filter(
         (booking) =>
-          booking.status === 'confirmed' ||
-          booking.status === 'completed'
+          booking.status === 'confirmed' || booking.status === 'completed'
       )
-      .reduce(
-        (total, booking) =>
-          total + Number(booking.total_price || 0),
-        0
-      );
+      .reduce((total, booking) => total + Number(booking.total_price || 0), 0);
 
     setBookings(bookingRows);
 
@@ -139,6 +131,7 @@ function Admin() {
       cars: carsResult.count || 0,
       bookings: bookingRows.length,
       pendingBookings,
+      expiredBookings,
       revenue,
     });
   };
@@ -239,20 +232,15 @@ function Admin() {
 
   return (
     <div className="admin-page">
-
       <div className="admin-header">
-
         <div>
           <h1>
-            {role === 'super_admin'
-              ? 'Super Admin Dashboard'
-              : 'Admin Dashboard'}
+            {role === 'super_admin' ? 'Super Admin Dashboard' : 'Admin Dashboard'}
           </h1>
           <p>Roadex analytics and full management.</p>
         </div>
 
         <div className="admin-header-actions">
-
           <button
             type="button"
             className="admin-refresh-button"
@@ -269,13 +257,10 @@ function Admin() {
           >
             {clearing ? 'Clearing...' : 'Clear Old Data'}
           </button>
-
         </div>
-
       </div>
 
       <div className="admin-stats">
-
         <div className="admin-stat-card">
           <span>Total Users</span>
           <strong>{stats.users}</strong>
@@ -296,18 +281,21 @@ function Admin() {
           <strong>{stats.pendingBookings}</strong>
         </div>
 
+        <div className="admin-stat-card expired-card">
+          <span>Expired Bookings</span>
+          <strong>{stats.expiredBookings}</strong>
+          <small>Past due</small>
+        </div>
+
         <div className="admin-stat-card revenue-card">
           <span>Revenue</span>
           <strong>{stats.revenue.toLocaleString()}</strong>
           <small>EGP</small>
         </div>
-
       </div>
 
       <div className="admin-charts">
-
         <div className="admin-chart-card">
-
           <div className="admin-chart-header">
             <h2>Bookings Over Time</h2>
             <span>Booking activity</span>
@@ -336,11 +324,9 @@ function Admin() {
           ) : (
             <div className="chart-empty">No booking data yet.</div>
           )}
-
         </div>
 
         <div className="admin-chart-card">
-
           <div className="admin-chart-header">
             <h2>Most Booked Cars</h2>
             <span>Top 5 vehicles</span>
@@ -362,11 +348,9 @@ function Admin() {
           ) : (
             <div className="chart-empty">No booking data yet.</div>
           )}
-
         </div>
 
         <div className="admin-chart-card admin-status-chart">
-
           <div className="admin-chart-header">
             <h2>Booking Status</h2>
             <span>Current booking distribution</span>
@@ -400,9 +384,7 @@ function Admin() {
           ) : (
             <div className="chart-empty">No booking status data yet.</div>
           )}
-
         </div>
-
       </div>
 
       <div className="admin-section-title">
@@ -413,20 +395,28 @@ function Admin() {
       </div>
 
       <div className="admin-management">
-
-        <div className="admin-management-card">
-          <div className="management-icon">🚘</div>
-          <h2>Cars</h2>
-          <p>Add new vehicles, update details, change quantity and manage car images.</p>
-          <button type="button" onClick={() => navigate('/admin/cars')}>
-            Manage Cars
-          </button>
-        </div>
+        {/* 🔥 Cars - يظهر للـ Super Admin بس */}
+        {role === 'super_admin' && (
+          <div className="admin-management-card">
+            <div className="management-icon">🚘</div>
+            <h2>Cars</h2>
+            <p>
+              Add new vehicles, update details, change quantity and manage car
+              images.
+            </p>
+            <button type="button" onClick={() => navigate('/admin/cars')}>
+              Manage Cars
+            </button>
+          </div>
+        )}
 
         <div className="admin-management-card">
           <div className="management-icon">📅</div>
           <h2>Bookings</h2>
-          <p>Review reservations, accept requests, refuse bookings and mark rentals as completed.</p>
+          <p>
+            Review reservations, accept requests, refuse bookings and mark
+            rentals as completed.
+          </p>
           <button type="button" onClick={() => navigate('/admin/bookings')}>
             Manage Bookings
           </button>
@@ -446,7 +436,9 @@ function Admin() {
         <div className="admin-management-card">
           <div className="management-icon">👥</div>
           <h2>Manage Customers</h2>
-          <p>Create new customer accounts and remove existing customer accounts.</p>
+          <p>
+            Create new customer accounts and remove existing customer accounts.
+          </p>
           <button type="button" onClick={() => navigate('/admin/manage-users')}>
             Manage Customers
           </button>
@@ -460,17 +452,19 @@ function Admin() {
             Add Booking
           </button>
         </div>
-
       </div>
 
       <div className="admin-recent-section">
-
         <div className="admin-section-title">
           <div>
             <h2>Recent Bookings</h2>
             <p>Latest booking activity.</p>
           </div>
-          <button type="button" className="view-all-button" onClick={() => navigate('/admin/bookings')}>
+          <button
+            type="button"
+            className="view-all-button"
+            onClick={() => navigate('/admin/bookings')}
+          >
             View All
           </button>
         </div>
@@ -487,19 +481,28 @@ function Admin() {
                       ? `${booking.cars.brand} ${booking.cars.model}`
                       : 'Unknown Car'}
                   </strong>
-                  <span>{new Date(booking.created_at).toLocaleString()}</span>
+                  <span>
+                    {new Date(booking.created_at).toLocaleString('en-GB', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                    })}
+                  </span>
                 </div>
                 <span className={`dashboard-status ${booking.status}`}>
                   {booking.status}
                 </span>
-                <strong>{Number(booking.total_price).toLocaleString()} EGP</strong>
+                <strong>
+                  {Number(booking.total_price).toLocaleString()} EGP
+                </strong>
               </div>
             ))}
           </div>
         )}
-
       </div>
-
     </div>
   );
 }

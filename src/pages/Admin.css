@@ -111,7 +111,7 @@
   max-width: 1200px;
   margin: 0 auto 28px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
 }
 
@@ -181,6 +181,19 @@
   font-size: 13px;
   font-weight: 500;
   transition: color 0.4s ease;
+}
+
+/* ===== Expired Card ===== */
+.admin-stat-card.expired-card {
+  border-color: rgba(255, 68, 68, 0.2);
+}
+
+.admin-stat-card.expired-card strong {
+  color: #ff6b6b;
+}
+
+.admin-stat-card.expired-card::before {
+  background: linear-gradient(90deg, #ff6b6b, #ff4444);
 }
 
 /* ===== Revenue Card ===== */

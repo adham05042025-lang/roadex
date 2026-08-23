@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabase';
+import { formatDate24 } from '../utils/formatDate';
 import './AdminBookings.css';
 
 function AdminBookings() {
@@ -9,8 +10,14 @@ function AdminBookings() {
   const [message, setMessage] = useState('');
   const [searchNumber, setSearchNumber] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
+  const [statusFilter, setStatusFilter] = useState('All');
 
-  // State للـ Modal
+  // State للـ Extension Modal
+  const [showExtensionModal, setShowExtensionModal] = useState(false);
+  const [extendingBooking, setExtendingBooking] = useState(null);
+  const [extensionDate, setExtensionDate] = useState('');
+  const [extensionReason, setExtensionReason] = useState('');
+
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
   const [carsList, setCarsList] = useState([]);
@@ -34,55 +41,51 @@ function AdminBookings() {
     loadCars();
   }, []);
 
-  // 🔥 حساب الأيام بـ 12 ساعة
   const calculateRentalDays = (pickupAt, returnAt) => {
     if (!pickupAt || !returnAt) return 0;
-    
     const pickup = new Date(pickupAt);
     const returnDate = new Date(returnAt);
     const difference = returnDate - pickup;
     const hours = difference / (1000 * 60 * 60);
-    
     if (difference <= 0) return 0;
-    
     if (hours <= 12) return 1;
     return Math.ceil(hours / 12);
   };
 
-  // 🔥 حساب السعر الشامل (عربية + سواق) بـ 12 ساعة
+  // حساب الأيام الإضافية بـ 12 ساعة
+  const calculateExtraDays = (oldDate, newDate) => {
+    const diff = newDate - oldDate;
+    const hours = diff / (1000 * 60 * 60);
+    if (hours <= 0) return 0;
+    if (hours <= 12) return 1;
+    return Math.ceil(hours / 12);
+  };
+
   const calculateTotalPrice = (carId, pickupAt, returnAt) => {
     if (!carId || !pickupAt || !returnAt) return 0;
-    
     const car = carsList.find(c => c.id === carId);
     if (!car) return 0;
-    
     const pickup = new Date(pickupAt);
     const returnDate = new Date(returnAt);
     const difference = returnDate - pickup;
     const hours = difference / (1000 * 60 * 60);
-    
     if (difference <= 0) return 0;
-    
     let days;
     if (hours <= 12) {
       days = 1;
     } else {
       days = Math.ceil(hours / 12);
     }
-    
-    // 🔥 سعر شامل (عربية + سواق)
     const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
     return days * totalPerDay;
   };
 
-  // تحميل السيارات
   const loadCars = async () => {
     setLoadingCars(true);
     const { data, error } = await supabase
       .from('cars')
       .select('id, brand, model, year, price_per_day, driver_price_per_day')
       .order('brand', { ascending: true });
-
     if (!error && data) {
       setCarsList(data);
     }
@@ -92,7 +95,6 @@ function AdminBookings() {
   const loadBookings = async () => {
     setLoading(true);
     setMessage('');
-
     const { data: bookingData, error: bookingError } = await supabase
       .from('bookings')
       .select(`
@@ -112,6 +114,8 @@ function AdminBookings() {
         deposit_paid,
         remaining_balance,
         contract_url,
+        extended_until,
+        extension_reason,
         cars (
           id,
           brand,
@@ -121,25 +125,20 @@ function AdminBookings() {
           driver_price_per_day
         )
       `);
-
     if (bookingError) {
       setMessage(bookingError.message);
       setBookings([]);
       setLoading(false);
       return;
     }
-
     const bookingRows = bookingData || [];
     const customerIds = [...new Set(bookingRows.map((b) => b.user_id).filter(Boolean))];
-
     let profileMap = {};
-
     if (customerIds.length > 0) {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, full_name, phone')
         .in('id', customerIds);
-
       if (profileError) {
         setMessage(`Bookings loaded, but customer details could not be loaded: ${profileError.message}`);
       } else {
@@ -147,10 +146,8 @@ function AdminBookings() {
           (profileData || []).map((profile) => [profile.id, profile])
         );
       }
-
       const { data: emailData, error: emailError } = await supabase
         .rpc('get_users_with_emails');
-
       if (!emailError && emailData) {
         emailData.forEach((user) => {
           if (profileMap[user.id]) {
@@ -162,34 +159,137 @@ function AdminBookings() {
         });
       }
     }
-
     const combinedBookings = bookingRows.map((booking) => ({
       ...booking,
       customer: profileMap[booking.user_id] || null,
     }));
-
     setBookings(combinedBookings);
     setLoading(false);
   };
 
+  const isExpired = (returnAt, status) => {
+    const now = new Date();
+    return (status === 'pending' || status === 'confirmed') && new Date(returnAt) < now;
+  };
+
   const updateStatus = async (bookingId, newStatus) => {
     setMessage('');
-
     if (newStatus === 'cancelled') {
       const confirmed = window.confirm('Are you sure you want to cancel this booking?');
       if (!confirmed) return;
     }
-
     if (newStatus === 'completed') {
       const confirmed = window.confirm('Are you sure you want to mark this rental as completed?');
       if (!confirmed) return;
     }
-
     setUpdatingId(bookingId);
-
     const { error } = await supabase
       .from('bookings')
       .update({ status: newStatus })
+      .eq('id', bookingId);
+    if (error) {
+      setMessage(error.message);
+      setUpdatingId('');
+      return;
+    }
+    const statusMessages = {
+      confirmed: 'Booking accepted successfully.',
+      completed: 'Rental completed successfully. The car is available again.',
+      cancelled: 'Booking cancelled successfully. The car is available again.',
+    };
+    setMessage(statusMessages[newStatus] || 'Booking updated successfully.');
+    await loadBookings();
+    setUpdatingId('');
+  };
+
+  // فتح Modal التمديد
+  const openExtensionModal = (booking) => {
+    setExtendingBooking(booking);
+    setExtensionDate(booking.return_at ? new Date(booking.return_at).toISOString().slice(0, 16) : '');
+    setExtensionReason(booking.extension_reason || '');
+    setShowExtensionModal(true);
+  };
+
+  // حفظ التمديد (يدوي من الأدمن)
+  const saveExtension = async () => {
+    if (!extendingBooking) return;
+    if (!extensionDate) {
+      setMessage('Please select a new return date.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to extend this booking until ${formatDate24(extensionDate)}?`);
+    if (!confirmed) return;
+
+    setMessage('');
+    setUpdatingId(extendingBooking.id);
+
+    const newReturnDate = new Date(extensionDate);
+    const oldReturnDate = new Date(extendingBooking.return_at);
+    
+    const extraDays = calculateExtraDays(oldReturnDate, newReturnDate);
+    const totalPerDay = getTotalPerDay(extendingBooking.cars);
+    const extraCost = extraDays * totalPerDay;
+    const newTotal = Number(extendingBooking.total_price) + extraCost;
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        return_at: newReturnDate.toISOString(),
+        total_price: newTotal,
+        extended_until: null,
+        extension_reason: null,
+        status: 'confirmed'
+      })
+      .eq('id', extendingBooking.id);
+
+    if (error) {
+      setMessage(error.message);
+      setUpdatingId('');
+      return;
+    }
+
+    setMessage(`Extension approved! New return date: ${formatDate24(extensionDate)}. Additional cost: ${extraCost.toLocaleString()} EGP`);
+    setShowExtensionModal(false);
+    setExtendingBooking(null);
+    setExtensionDate('');
+    setExtensionReason('');
+    await loadBookings();
+    setUpdatingId('');
+  };
+
+  // الموافقة على طلب التمديد من العميل
+  const approveExtension = async (bookingId) => {
+    const confirmed = window.confirm('Are you sure you want to approve the extension request?');
+    if (!confirmed) return;
+
+    setMessage('');
+    setUpdatingId(bookingId);
+
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking || !booking.extended_until) {
+      setMessage('No extension request found.');
+      setUpdatingId('');
+      return;
+    }
+
+    const newReturnDate = new Date(booking.extended_until);
+    const oldReturnDate = new Date(booking.return_at);
+    
+    const extraDays = calculateExtraDays(oldReturnDate, newReturnDate);
+    const totalPerDay = getTotalPerDay(booking.cars);
+    const extraCost = extraDays * totalPerDay;
+    const newTotal = Number(booking.total_price) + extraCost;
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        return_at: booking.extended_until,
+        total_price: newTotal,
+        extended_until: null,
+        extension_reason: null,
+        status: 'confirmed'
+      })
       .eq('id', bookingId);
 
     if (error) {
@@ -198,34 +298,51 @@ function AdminBookings() {
       return;
     }
 
-    const statusMessages = {
-      confirmed: 'Booking accepted successfully.',
-      completed: 'Rental completed successfully. The car is available again.',
-      cancelled: 'Booking cancelled successfully. The car is available again.',
-    };
-    setMessage(statusMessages[newStatus] || 'Booking updated successfully.');
-
+    setMessage(`Extension approved! Additional cost: ${extraCost.toLocaleString()} EGP`);
     await loadBookings();
     setUpdatingId('');
   };
 
-  // توليد العقد
+  // رفض طلب التمديد
+  const rejectExtension = async (bookingId) => {
+    const confirmed = window.confirm('Are you sure you want to reject the extension request?');
+    if (!confirmed) return;
+
+    setMessage('');
+    setUpdatingId(bookingId);
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        extended_until: null,
+        extension_reason: null
+      })
+      .eq('id', bookingId);
+
+    if (error) {
+      setMessage(error.message);
+      setUpdatingId('');
+      return;
+    }
+
+    setMessage('Extension request rejected.');
+    await loadBookings();
+    setUpdatingId('');
+  };
+
   const handleContract = async (booking) => {
     setMessage('');
     setUpdatingId(booking.id);
-
     try {
       const { data, error } = await supabase
         .rpc('generate_contract', {
           p_booking_id: booking.id,
         });
-
       if (error) {
         setMessage(error.message);
         setUpdatingId('');
         return;
       }
-
       if (data) {
         const newWindow = window.open('', '_blank');
         if (newWindow) {
@@ -242,14 +359,12 @@ function AdminBookings() {
     }
   };
 
-  // حساب الباقي لحظياً
   const calculateRemaining = () => {
     const total = Number(editForm.total_price) || 0;
     const deposit = Number(editForm.deposit_paid) || 0;
     return total - deposit;
   };
 
-  // فتح Modal
   const openEditModal = (booking) => {
     setEditingBooking(booking);
     setEditForm({
@@ -268,7 +383,6 @@ function AdminBookings() {
     setShowEditModal(true);
   };
 
-  // إغلاق Modal
   const closeEditModal = () => {
     setShowEditModal(false);
     setEditingBooking(null);
@@ -287,31 +401,24 @@ function AdminBookings() {
     });
   };
 
-  // حفظ التعديلات
   const saveEdit = async () => {
     if (!editingBooking) return;
-
     setMessage('');
     setUpdatingId(editingBooking.id);
-
     if (new Date(editForm.return_at) <= new Date(editForm.pickup_at)) {
       setMessage('Return time must be after pickup time.');
       setUpdatingId('');
       return;
     }
-
     if (!editForm.car_id) {
       setMessage('Please select a car.');
       setUpdatingId('');
       return;
     }
-
-    // 🔥 حساب السعر الشامل بـ 12 ساعة
     const calculatedTotal = calculateTotalPrice(editForm.car_id, editForm.pickup_at, editForm.return_at);
     const total = calculatedTotal > 0 ? calculatedTotal : Number(editForm.total_price) || 0;
     const deposit = Number(editForm.deposit_paid) || 0;
     const remaining = total - deposit;
-
     const { error } = await supabase
       .from('bookings')
       .update({
@@ -328,13 +435,11 @@ function AdminBookings() {
         total_price: total,
       })
       .eq('id', editingBooking.id);
-
     if (error) {
       setMessage(error.message);
       setUpdatingId('');
       return;
     }
-
     setMessage('Booking updated successfully!');
     closeEditModal();
     await loadBookings();
@@ -343,32 +448,59 @@ function AdminBookings() {
 
   const visibleBookings = useMemo(() => {
     const normalizedSearch = searchNumber.trim().replace(/^#/, '');
+    const now = new Date();
 
     return [...bookings]
       .filter((booking) => {
-        if (!normalizedSearch) return true;
-        return String(booking.booking_number || '').includes(normalizedSearch);
+        if (normalizedSearch) {
+          return String(booking.booking_number || '').includes(normalizedSearch);
+        }
+        return true;
+      })
+      .filter((booking) => {
+        if (statusFilter === 'All') return true;
+        if (statusFilter === 'expired') {
+          return isExpired(booking.return_at, booking.status);
+        }
+        return booking.status === statusFilter;
       })
       .sort((a, b) => {
         const dateA = new Date(a.created_at).getTime();
         const dateB = new Date(b.created_at).getTime();
         return sortOrder === 'oldest' ? dateA - dateB : dateB - dateA;
       });
-  }, [bookings, searchNumber, sortOrder]);
+  }, [bookings, searchNumber, sortOrder, statusFilter]);
 
   const toggleSortOrder = () => {
     setSortOrder((current) => (current === 'newest' ? 'oldest' : 'newest'));
   };
 
-  const formatDate = (date) => {
-    if (!date) return 'N/A';
-    return new Date(date).toLocaleString();
-  };
-
-  // 🔥 حساب السعر الشامل للسيارة
   const getTotalPerDay = (car) => {
     if (!car) return 0;
     return Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+  };
+
+  const statusCounts = useMemo(() => {
+    const counts = { All: bookings.length, pending: 0, confirmed: 0, completed: 0, cancelled: 0, expired: 0 };
+    const now = new Date();
+    bookings.forEach((b) => {
+      if (b.status === 'pending' || b.status === 'confirmed' || b.status === 'completed' || b.status === 'cancelled') {
+        counts[b.status]++;
+      }
+      if (isExpired(b.return_at, b.status)) {
+        counts.expired++;
+      }
+    });
+    return counts;
+  }, [bookings]);
+
+  const statusLabels = {
+    All: `All (${statusCounts.All})`,
+    pending: `Pending (${statusCounts.pending})`,
+    confirmed: `Confirmed (${statusCounts.confirmed})`,
+    completed: `Completed (${statusCounts.completed})`,
+    cancelled: `Cancelled (${statusCounts.cancelled})`,
+    expired: `Expired (${statusCounts.expired})`,
   };
 
   return (
@@ -378,7 +510,20 @@ function AdminBookings() {
         <p>Search reservations, review customer details and manage booking status.</p>
       </div>
 
-      {/* Toolbar */}
+      {/* Status Filter */}
+      <div className="admin-bookings-filters">
+        {Object.entries(statusLabels).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            className={`status-filter-btn ${statusFilter === key ? 'active' : ''} ${key}`}
+            onClick={() => setStatusFilter(key)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="admin-bookings-toolbar">
         <div className="admin-booking-search">
           <label htmlFor="booking-number-search">Search by Booking Number</label>
@@ -391,7 +536,6 @@ function AdminBookings() {
             onChange={(e) => setSearchNumber(e.target.value.replace(/[^0-9#]/g, ''))}
           />
         </div>
-
         <div className="admin-bookings-toolbar-actions">
           <button type="button" className="sort-bookings-button" onClick={toggleSortOrder}>
             {sortOrder === 'newest' ? '📅 Newest First' : '📅 Oldest First'}
@@ -402,198 +546,249 @@ function AdminBookings() {
         </div>
       </div>
 
-      {/* Results Count */}
       <div className="admin-bookings-results">
         <span>📋 {visibleBookings.length} {visibleBookings.length === 1 ? 'booking' : 'bookings'}</span>
         <span>Sorted: {sortOrder === 'newest' ? 'newest first' : 'oldest first'}</span>
       </div>
 
-      {/* Message */}
       {message && <div className="admin-bookings-message">{message}</div>}
 
-      {/* Loading */}
       {loading && <div className="admin-bookings-empty">Loading bookings...</div>}
 
-      {/* Empty */}
       {!loading && visibleBookings.length === 0 && (
         <div className="admin-bookings-empty">
           {searchNumber ? 'No booking matches that number.' : 'No bookings found.'}
         </div>
       )}
 
-      {/* Bookings List */}
       {!loading && (
         <div className="admin-bookings-list">
-          {visibleBookings.map((booking) => (
-            <div className="admin-booking-card" key={booking.id}>
-              {/* Header */}
-              <div className="admin-booking-header">
-                <div className="admin-booking-title">
-                  <span className="booking-number"># {booking.booking_number}</span>
-                  <h2>{booking.cars?.brand || 'Unknown'} {booking.cars?.model || 'Car'}</h2>
-                </div>
-                <span className={`booking-status ${booking.status}`}>{booking.status}</span>
-              </div>
-
-              {/* Customer Info */}
-              <div className="admin-booking-customer">
-                <div className="admin-booking-details-grid">
-                  <div className="booking-detail-box">
-                    <span>Customer</span>
-                    <strong>{booking.customer?.full_name || 'Unknown'}</strong>
+          {visibleBookings.map((booking) => {
+            const expired = isExpired(booking.return_at, booking.status);
+            return (
+              <div className={`admin-booking-card ${expired ? 'expired' : ''}`} key={booking.id}>
+                <div className="admin-booking-header">
+                  <div className="admin-booking-title">
+                    <span className="booking-number"># {booking.booking_number}</span>
+                    <h2>{booking.cars?.brand || 'Unknown'} {booking.cars?.model || 'Car'}</h2>
                   </div>
-                  <div className="booking-detail-box">
-                    <span>Email</span>
-                    <strong className="customer-email">{booking.customer?.email || 'N/A'}</strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Phone</span>
-                    <strong>{booking.customer?.phone || 'N/A'}</strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Extra Phone</span>
-                    <strong>{booking.customer_phone_extra || 'N/A'}</strong>
+                  <div className="admin-booking-status-group">
+                    <span className={`booking-status ${booking.status}`}>{booking.status}</span>
+                    {expired && <span className="booking-status expired">Expired</span>}
+                    {booking.extended_until && <span className="booking-status pending">Extension Requested</span>}
                   </div>
                 </div>
-              </div>
 
-              {/* Driver Info */}
-              <div className="admin-booking-driver">
-                <div className="admin-booking-details-grid">
-                  <div className="booking-detail-box">
-                    <span>Driver Name</span>
-                    <strong>{booking.driver_name || 'Not assigned'}</strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Driver Phone</span>
-                    <strong>{booking.driver_phone || 'N/A'}</strong>
+                <div className="admin-booking-customer">
+                  <div className="admin-booking-details-grid">
+                    <div className="booking-detail-box">
+                      <span>Customer</span>
+                      <strong>{booking.customer?.full_name || 'Unknown'}</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Email</span>
+                      <strong className="customer-email">{booking.customer?.email || 'N/A'}</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Phone</span>
+                      <strong>{booking.customer?.phone || 'N/A'}</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Extra Phone</span>
+                      <strong>{booking.customer_phone_extra || 'N/A'}</strong>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Rental Info */}
-              <div className="admin-booking-rental">
-                <div className="admin-booking-details-grid">
-                  <div className="booking-detail-box">
-                    <span>Car</span>
-                    <strong>{booking.cars?.brand || 'Unknown'} {booking.cars?.model || 'Car'}</strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Year</span>
-                    <strong>{booking.cars?.year || 'N/A'}</strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Pickup</span>
-                    <strong>{formatDate(booking.pickup_at)}</strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Return</span>
-                    <strong>{formatDate(booking.return_at)}</strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Created</span>
-                    <strong>{formatDate(booking.created_at)}</strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Rental Days</span>
-                    <strong>
-                      {calculateRentalDays(booking.pickup_at, booking.return_at)} days
-                      <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>
-                        (12h = 1 day)
-                      </small>
-                    </strong>
-                  </div>
-                  {/* 🔥 سعر شامل */}
-                  <div className="booking-detail-box">
-                    <span>Price Per Day</span>
-                    <strong>
-                      {getTotalPerDay(booking.cars).toLocaleString()} EGP
-                      <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>
-                        (Car + Driver)
-                      </small>
-                    </strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Plate Number</span>
-                    <strong>{booking.plate_number || 'N/A'}</strong>
-                  </div>
-                  <div className="booking-detail-box">
-                    <span>Deposit</span>
-                    <strong>{Number(booking.deposit_paid || 0).toLocaleString()} EGP</strong>
-                  </div>
-                  <div className="booking-detail-box total-price">
-                    <span>Remaining</span>
-                    <strong>{Number(booking.remaining_balance || 0).toLocaleString()} EGP</strong>
-                  </div>
-                  <div className="booking-detail-box total-price">
-                    <span>Total</span>
-                    <strong>{Number(booking.total_price || 0).toLocaleString()} EGP</strong>
+                <div className="admin-booking-driver">
+                  <div className="admin-booking-details-grid">
+                    <div className="booking-detail-box">
+                      <span>Driver Name</span>
+                      <strong>{booking.driver_name || 'Not assigned'}</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Driver Phone</span>
+                      <strong>{booking.driver_phone || 'N/A'}</strong>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="admin-booking-actions">
-                {booking.status === 'pending' && (
-                  <button
-                    type="button"
-                    className="accept-booking"
-                    onClick={() => updateStatus(booking.id, 'confirmed')}
-                    disabled={updatingId === booking.id}
-                  >
-                    {updatingId === booking.id ? '⏳' : '✅ Accept'}
+                <div className="admin-booking-rental">
+                  <div className="admin-booking-details-grid">
+                    <div className="booking-detail-box">
+                      <span>Car</span>
+                      <strong>{booking.cars?.brand || 'Unknown'} {booking.cars?.model || 'Car'}</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Year</span>
+                      <strong>{booking.cars?.year || 'N/A'}</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Pickup</span>
+                      <strong>{formatDate24(booking.pickup_at)}</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Return</span>
+                      <strong>{formatDate24(booking.return_at)}</strong>
+                      {expired && <span className="expired-label">⚠️ Past Due</span>}
+                      {booking.extended_until && (
+                        <small style={{ color: '#ffc107', display: 'block' }}>
+                          Extension Request: {formatDate24(booking.extended_until)}
+                        </small>
+                      )}
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Created</span>
+                      <strong>{formatDate24(booking.created_at)}</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Rental Days</span>
+                      <strong>
+                        {calculateRentalDays(booking.pickup_at, booking.return_at)} days
+                        <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>(12h = 1 day)</small>
+                      </strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Price Per Day</span>
+                      <strong>
+                        {getTotalPerDay(booking.cars).toLocaleString()} EGP
+                        <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>(Car + Driver)</small>
+                      </strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Plate Number</span>
+                      <strong>{booking.plate_number || 'N/A'}</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Deposit</span>
+                      <strong>{Number(booking.deposit_paid || 0).toLocaleString()} EGP</strong>
+                    </div>
+                    <div className="booking-detail-box total-price">
+                      <span>Remaining</span>
+                      <strong>{Number(booking.remaining_balance || 0).toLocaleString()} EGP</strong>
+                    </div>
+                    <div className="booking-detail-box total-price">
+                      <span>Total</span>
+                      <strong>{Number(booking.total_price || 0).toLocaleString()} EGP</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="admin-booking-actions">
+                  {booking.status === 'pending' && (
+                    <button className="accept-booking" onClick={() => updateStatus(booking.id, 'confirmed')} disabled={updatingId === booking.id}>
+                      {updatingId === booking.id ? '⏳' : '✅ Accept'}
+                    </button>
+                  )}
+                  {booking.status === 'confirmed' && (
+                    <button className="complete-booking" onClick={() => updateStatus(booking.id, 'completed')} disabled={updatingId === booking.id}>
+                      {updatingId === booking.id ? '⏳' : '✅ Complete'}
+                    </button>
+                  )}
+                  {(booking.status === 'pending' || booking.status === 'confirmed') && (
+                    <button className="refuse-booking" onClick={() => updateStatus(booking.id, 'cancelled')} disabled={updatingId === booking.id}>
+                      {updatingId === booking.id ? '⏳' : '❌ Cancel'}
+                    </button>
+                  )}
+
+                  {/* زر التمديد (للأدمن) */}
+                  <button className="extend-booking-admin-btn" onClick={() => openExtensionModal(booking)} disabled={updatingId === booking.id}>
+                    {updatingId === booking.id ? '⏳' : '📅 Extend'}
                   </button>
-                )}
 
-                {booking.status === 'confirmed' && (
-                  <button
-                    type="button"
-                    className="complete-booking"
-                    onClick={() => updateStatus(booking.id, 'completed')}
-                    disabled={updatingId === booking.id}
-                  >
-                    {updatingId === booking.id ? '⏳' : '✅ Complete'}
+                  {/* أزرار الموافقة/الرفض على طلب العميل */}
+                  {booking.extended_until && (
+                    <>
+                      <button className="approve-extension-btn" onClick={() => approveExtension(booking.id)} disabled={updatingId === booking.id}>
+                        {updatingId === booking.id ? '⏳' : '✅ Approve'}
+                      </button>
+                      <button className="reject-extension-btn" onClick={() => rejectExtension(booking.id)} disabled={updatingId === booking.id}>
+                        {updatingId === booking.id ? '⏳' : '❌ Reject'}
+                      </button>
+                    </>
+                  )}
+
+                  <button className="contract-booking" onClick={() => handleContract(booking)} disabled={updatingId === booking.id}>
+                    {updatingId === booking.id ? '⏳' : '📄 Contract'}
                   </button>
-                )}
-
-                {(booking.status === 'pending' || booking.status === 'confirmed') && (
-                  <button
-                    type="button"
-                    className="refuse-booking"
-                    onClick={() => updateStatus(booking.id, 'cancelled')}
-                    disabled={updatingId === booking.id}
-                  >
-                    {updatingId === booking.id ? '⏳' : '❌ Cancel'}
+                  <button className="edit-booking-btn" onClick={() => openEditModal(booking)}>
+                    ✏️ Edit All
                   </button>
-                )}
-
-                <button
-                  type="button"
-                  className="contract-booking"
-                  onClick={() => handleContract(booking)}
-                  disabled={updatingId === booking.id}
-                >
-                  {updatingId === booking.id ? '⏳' : '📄 Contract'}
-                </button>
-
-                <button
-                  type="button"
-                  className="edit-booking-btn"
-                  onClick={() => openEditModal(booking)}
-                >
-                  ✏️ Edit All
-                </button>
-
-                {booking.status === 'completed' && (
-                  <div className="booking-final-state">✅ Completed</div>
-                )}
-
-                {booking.status === 'cancelled' && (
-                  <div className="booking-final-state cancelled">❌ Cancelled</div>
-                )}
+                  {booking.status === 'completed' && <div className="booking-final-state">✅ Completed</div>}
+                  {booking.status === 'cancelled' && <div className="booking-final-state cancelled">❌ Cancelled</div>}
+                  {expired && booking.status !== 'completed' && booking.status !== 'cancelled' && (
+                    <div className="booking-final-state expired-state">⚠️ Expired</div>
+                  )}
+                </div>
               </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modal التمديد */}
+      {showExtensionModal && extendingBooking && (
+        <div className="modal-overlay" onClick={() => setShowExtensionModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📅 Extend Booking #{extendingBooking.booking_number}</h2>
+              <button className="modal-close" onClick={() => setShowExtensionModal(false)}>×</button>
             </div>
-          ))}
+            <div className="modal-body">
+              <div className="modal-field">
+                <label>Current Return Date</label>
+                <input type="text" value={formatDate24(extendingBooking.return_at)} disabled style={{ opacity: 0.7 }} />
+              </div>
+              <div className="modal-field">
+                <label>New Return Date *</label>
+                <input
+                  type="datetime-local"
+                  value={extensionDate}
+                  min={new Date().toISOString().slice(0, 16)}
+                  onChange={(e) => setExtensionDate(e.target.value)}
+                />
+              </div>
+              <div className="modal-field">
+                <label>Reason (optional)</label>
+                <input
+                  type="text"
+                  placeholder="Reason for extension..."
+                  value={extensionReason}
+                  onChange={(e) => setExtensionReason(e.target.value)}
+                />
+              </div>
+              <div className="modal-field">
+                <label>Price Per Day</label>
+                <input type="text" value={`${getTotalPerDay(extendingBooking.cars).toLocaleString()} EGP`} disabled style={{ opacity: 0.7 }} />
+              </div>
+              {/* عرض التكلفة الإضافية */}
+              {extensionDate && extendingBooking && (
+                <div className="modal-field">
+                  <label>Additional Cost</label>
+                  <input 
+                    type="text" 
+                    value={(() => {
+                      const newDate = new Date(extensionDate);
+                      const oldDate = new Date(extendingBooking.return_at);
+                      const extraDays = calculateExtraDays(oldDate, newDate);
+                      const totalPerDay = getTotalPerDay(extendingBooking.cars);
+                      const extraCost = extraDays * totalPerDay;
+                      return extraDays > 0 ? `${extraCost.toLocaleString()} EGP (${extraDays} extra days)` : '0 EGP';
+                    })()} 
+                    disabled 
+                    style={{ opacity: 0.7 }}
+                  />
+                </div>
+              )}
+              {message && <div className="modal-message">{message}</div>}
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="modal-cancel" onClick={() => setShowExtensionModal(false)}>Cancel</button>
+              <button type="button" className="modal-save" onClick={saveExtension} disabled={updatingId === extendingBooking.id}>
+                {updatingId === extendingBooking.id ? '⏳ Saving...' : '💾 Apply Extension'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -605,15 +800,10 @@ function AdminBookings() {
               <h2>✏️ Edit Booking #{editingBooking.booking_number}</h2>
               <button className="modal-close" onClick={closeEditModal}>×</button>
             </div>
-
             <div className="modal-body">
-              {/* Car Selection */}
               <div className="modal-field">
                 <label>Select Car *</label>
-                <select
-                  value={editForm.car_id}
-                  onChange={(e) => setEditForm({ ...editForm, car_id: e.target.value })}
-                >
+                <select value={editForm.car_id} onChange={(e) => setEditForm({ ...editForm, car_id: e.target.value })}>
                   <option value="">-- Select Car --</option>
                   {carsList.map((car) => {
                     const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
@@ -625,152 +815,64 @@ function AdminBookings() {
                   })}
                 </select>
               </div>
-
-              {/* Driver Name */}
               <div className="modal-field">
                 <label>Driver Name</label>
-                <input
-                  type="text"
-                  placeholder="Enter driver name"
-                  value={editForm.driver_name}
-                  onChange={(e) => setEditForm({ ...editForm, driver_name: e.target.value })}
-                />
+                <input type="text" placeholder="Enter driver name" value={editForm.driver_name} onChange={(e) => setEditForm({ ...editForm, driver_name: e.target.value })} />
               </div>
-
-              {/* Driver Phone */}
               <div className="modal-field">
                 <label>Driver Phone</label>
-                <input
-                  type="text"
-                  placeholder="Enter driver phone"
-                  value={editForm.driver_phone}
-                  onChange={(e) => setEditForm({ ...editForm, driver_phone: e.target.value })}
-                />
+                <input type="text" placeholder="Enter driver phone" value={editForm.driver_phone} onChange={(e) => setEditForm({ ...editForm, driver_phone: e.target.value })} />
               </div>
-
-              {/* Customer Extra Phone */}
               <div className="modal-field">
                 <label>Customer Extra Phone</label>
-                <input
-                  type="text"
-                  placeholder="Enter extra customer phone"
-                  value={editForm.customer_phone_extra}
-                  onChange={(e) => setEditForm({ ...editForm, customer_phone_extra: e.target.value })}
-                />
+                <input type="text" placeholder="Enter extra customer phone" value={editForm.customer_phone_extra} onChange={(e) => setEditForm({ ...editForm, customer_phone_extra: e.target.value })} />
               </div>
-
-              {/* Plate Number */}
               <div className="modal-field">
                 <label>Plate Number</label>
-                <input
-                  type="text"
-                  placeholder="e.g., ABC 1234"
-                  value={editForm.plate_number}
-                  onChange={(e) => setEditForm({ ...editForm, plate_number: e.target.value })}
-                />
+                <input type="text" placeholder="e.g., ABC 1234" value={editForm.plate_number} onChange={(e) => setEditForm({ ...editForm, plate_number: e.target.value })} />
               </div>
-
-              {/* Deposit Paid */}
               <div className="modal-field">
                 <label>Deposit Paid (EGP)</label>
-                <input
-                  type="number"
-                  placeholder="Enter deposit amount"
-                  value={editForm.deposit_paid}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setEditForm({ 
-                      ...editForm, 
-                      deposit_paid: val,
-                      remaining_balance: (Number(editForm.total_price) || 0) - (Number(val) || 0)
-                    });
-                  }}
-                />
-                <small style={{ color: '#888', fontSize: '11px' }}>
-                  Remaining will be calculated automatically
-                </small>
+                <input type="number" placeholder="Enter deposit amount" value={editForm.deposit_paid} onChange={(e) => {
+                  const val = e.target.value;
+                  setEditForm({ ...editForm, deposit_paid: val, remaining_balance: (Number(editForm.total_price) || 0) - (Number(val) || 0) });
+                }} />
+                <small style={{ color: '#888', fontSize: '11px' }}>Remaining will be calculated automatically</small>
               </div>
-
-              {/* Remaining Balance (للقراءة فقط) */}
               <div className="modal-field">
                 <label>Remaining Balance (EGP)</label>
-                <input
-                  type="text"
-                  value={calculateRemaining().toLocaleString()}
-                  disabled
-                  style={{ opacity: 0.7, cursor: 'not-allowed', background: '#0d0d0d' }}
-                />
+                <input type="text" value={calculateRemaining().toLocaleString()} disabled style={{ opacity: 0.7, cursor: 'not-allowed', background: '#0d0d0d' }} />
               </div>
-
-              {/* Pickup Date */}
               <div className="modal-field">
                 <label>Pickup Date & Time</label>
-                <input
-                  type="datetime-local"
-                  value={editForm.pickup_at}
-                  onChange={(e) => setEditForm({ ...editForm, pickup_at: e.target.value })}
-                />
+                <input type="datetime-local" value={editForm.pickup_at} onChange={(e) => setEditForm({ ...editForm, pickup_at: e.target.value })} />
               </div>
-
-              {/* Return Date */}
               <div className="modal-field">
                 <label>Return Date & Time</label>
-                <input
-                  type="datetime-local"
-                  value={editForm.return_at}
-                  onChange={(e) => setEditForm({ ...editForm, return_at: e.target.value })}
-                />
+                <input type="datetime-local" value={editForm.return_at} onChange={(e) => setEditForm({ ...editForm, return_at: e.target.value })} />
               </div>
-
-              {/* Status */}
               <div className="modal-field">
                 <label>Status</label>
-                <select
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                >
+                <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="completed">Completed</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
-
-              {/* Total Price */}
               <div className="modal-field">
                 <label>Total Price (EGP)</label>
-                <input
-                  type="number"
-                  placeholder="Enter total price"
-                  value={editForm.total_price}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setEditForm({ 
-                      ...editForm, 
-                      total_price: val,
-                      remaining_balance: (Number(val) || 0) - (Number(editForm.deposit_paid) || 0)
-                    });
-                  }}
-                />
-                <small style={{ color: '#888', fontSize: '11px' }}>
-                  Price will be auto-calculated based on 12h/day
-                </small>
+                <input type="number" placeholder="Enter total price" value={editForm.total_price} onChange={(e) => {
+                  const val = e.target.value;
+                  setEditForm({ ...editForm, total_price: val, remaining_balance: (Number(val) || 0) - (Number(editForm.deposit_paid) || 0) });
+                }} />
+                <small style={{ color: '#888', fontSize: '11px' }}>Price will be auto-calculated based on 12h/day</small>
               </div>
-
-              {/* Message */}
               {message && <div className="modal-message">{message}</div>}
             </div>
-
             <div className="modal-footer">
-              <button type="button" className="modal-cancel" onClick={closeEditModal}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="modal-save"
-                onClick={saveEdit}
-                disabled={updatingId === editingBooking.id}
-              >
+              <button type="button" className="modal-cancel" onClick={closeEditModal}>Cancel</button>
+              <button type="button" className="modal-save" onClick={saveEdit} disabled={updatingId === editingBooking.id}>
                 {updatingId === editingBooking.id ? '⏳ Saving...' : '💾 Save Changes'}
               </button>
             </div>
