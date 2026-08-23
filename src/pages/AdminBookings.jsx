@@ -12,12 +12,6 @@ function AdminBookings() {
   const [sortOrder, setSortOrder] = useState('newest');
   const [statusFilter, setStatusFilter] = useState('All');
 
-  // State للـ Extension Modal
-  const [showExtensionModal, setShowExtensionModal] = useState(false);
-  const [extendingBooking, setExtendingBooking] = useState(null);
-  const [extensionDate, setExtensionDate] = useState('');
-  const [extensionReason, setExtensionReason] = useState('');
-
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
   const [carsList, setCarsList] = useState([]);
@@ -36,6 +30,11 @@ function AdminBookings() {
     total_price: '',
   });
 
+  const [showExtensionModal, setShowExtensionModal] = useState(false);
+  const [extendingBooking, setExtendingBooking] = useState(null);
+  const [extensionDate, setExtensionDate] = useState('');
+  const [extensionReason, setExtensionReason] = useState('');
+
   useEffect(() => {
     loadBookings();
     loadCars();
@@ -52,7 +51,6 @@ function AdminBookings() {
     return Math.ceil(hours / 12);
   };
 
-  // حساب الأيام الإضافية بـ 12 ساعة
   const calculateExtraDays = (oldDate, newDate) => {
     const diff = newDate - oldDate;
     const hours = diff / (1000 * 60 * 60);
@@ -172,160 +170,124 @@ function AdminBookings() {
     return (status === 'pending' || status === 'confirmed') && new Date(returnAt) < now;
   };
 
+  // 🔥 updateStatus مع الإشعارات
   const updateStatus = async (bookingId, newStatus) => {
     setMessage('');
+    
     if (newStatus === 'cancelled') {
       const confirmed = window.confirm('Are you sure you want to cancel this booking?');
       if (!confirmed) return;
     }
+    
     if (newStatus === 'completed') {
       const confirmed = window.confirm('Are you sure you want to mark this rental as completed?');
       if (!confirmed) return;
     }
+    
     setUpdatingId(bookingId);
+    
+    const { data: booking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('total_price, deposit_paid, remaining_balance, booking_number, status, user_id')
+      .eq('id', bookingId)
+      .single();
+      
+    if (fetchError) {
+      setMessage(fetchError.message);
+      setUpdatingId('');
+      return;
+    }
+    
+    const oldStatus = booking.status;
+    const bookingNumber = booking.booking_number;
+    
+    // جلب اسم السيارة
+    const carData = await supabase
+      .from('cars')
+      .select('brand, model')
+      .eq('id', booking.car_id)
+      .single();
+      
+    const carName = carData.data ? `${carData.data.brand} ${carData.data.model}` : 'Car';
+    
+    let deposit = booking.deposit_paid || 0;
+    let remaining = booking.remaining_balance || 0;
+    const total = booking.total_price || 0;
+    
+    if (newStatus === 'cancelled') {
+      deposit = 0;
+      remaining = 0;
+    } else if (newStatus === 'completed') {
+      deposit = total;
+      remaining = 0;
+    } else if (newStatus === 'confirmed') {
+      if (deposit === 0 && total > 0) {
+        deposit = Math.round(total * 0.3);
+        remaining = total - deposit;
+      }
+    }
+    
     const { error } = await supabase
       .from('bookings')
-      .update({ status: newStatus })
+      .update({ 
+        status: newStatus,
+        deposit_paid: deposit,
+        remaining_balance: remaining,
+      })
       .eq('id', bookingId);
+      
     if (error) {
       setMessage(error.message);
       setUpdatingId('');
       return;
     }
+    
+    // 🔥 إشعار للأدمن (تغيير حالة)
+    await supabase
+      .from('notifications')
+      .insert({
+        type: 'status_change',
+        title: `Booking #${bookingNumber} status changed`,
+        message: `Status changed from ${oldStatus} to ${newStatus}`,
+        link: `/admin/bookings`,
+      });
+
+    // 🔥 إشعار للعميل صاحب الطلب بس (حسب الحالة الجديدة)
+    let notifType = 'status_change';
+    let notifTitle = `Your booking #${bookingNumber} is ${newStatus}`;
+    let notifMessage = `Your booking for ${carName} is now ${newStatus}`;
+
+    if (newStatus === 'confirmed') {
+      notifType = 'booking_confirmed';
+      notifTitle = `✅ Booking #${bookingNumber} confirmed!`;
+      notifMessage = `Your booking for ${carName} has been confirmed.`;
+    } else if (newStatus === 'completed') {
+      notifType = 'booking_completed';
+      notifTitle = `🏁 Booking #${bookingNumber} completed!`;
+      notifMessage = `Your rental for ${carName} has been completed. Thank you!`;
+    } else if (newStatus === 'cancelled') {
+      notifType = 'booking_cancelled';
+      notifTitle = `❌ Booking #${bookingNumber} cancelled`;
+      notifMessage = `Your booking for ${carName} has been cancelled.`;
+    }
+
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: booking.user_id,
+        type: notifType,
+        title: notifTitle,
+        message: notifMessage,
+        link: `/my-bookings`,
+      });
+    
     const statusMessages = {
       confirmed: 'Booking accepted successfully.',
       completed: 'Rental completed successfully. The car is available again.',
       cancelled: 'Booking cancelled successfully. The car is available again.',
     };
     setMessage(statusMessages[newStatus] || 'Booking updated successfully.');
-    await loadBookings();
-    setUpdatingId('');
-  };
-
-  // فتح Modal التمديد
-  const openExtensionModal = (booking) => {
-    setExtendingBooking(booking);
-    setExtensionDate(booking.return_at ? new Date(booking.return_at).toISOString().slice(0, 16) : '');
-    setExtensionReason(booking.extension_reason || '');
-    setShowExtensionModal(true);
-  };
-
-  // حفظ التمديد (يدوي من الأدمن)
-  const saveExtension = async () => {
-    if (!extendingBooking) return;
-    if (!extensionDate) {
-      setMessage('Please select a new return date.');
-      return;
-    }
-
-    const confirmed = window.confirm(`Are you sure you want to extend this booking until ${formatDate24(extensionDate)}?`);
-    if (!confirmed) return;
-
-    setMessage('');
-    setUpdatingId(extendingBooking.id);
-
-    const newReturnDate = new Date(extensionDate);
-    const oldReturnDate = new Date(extendingBooking.return_at);
     
-    const extraDays = calculateExtraDays(oldReturnDate, newReturnDate);
-    const totalPerDay = getTotalPerDay(extendingBooking.cars);
-    const extraCost = extraDays * totalPerDay;
-    const newTotal = Number(extendingBooking.total_price) + extraCost;
-
-    const { error } = await supabase
-      .from('bookings')
-      .update({
-        return_at: newReturnDate.toISOString(),
-        total_price: newTotal,
-        extended_until: null,
-        extension_reason: null,
-        status: 'confirmed'
-      })
-      .eq('id', extendingBooking.id);
-
-    if (error) {
-      setMessage(error.message);
-      setUpdatingId('');
-      return;
-    }
-
-    setMessage(`Extension approved! New return date: ${formatDate24(extensionDate)}. Additional cost: ${extraCost.toLocaleString()} EGP`);
-    setShowExtensionModal(false);
-    setExtendingBooking(null);
-    setExtensionDate('');
-    setExtensionReason('');
-    await loadBookings();
-    setUpdatingId('');
-  };
-
-  // الموافقة على طلب التمديد من العميل
-  const approveExtension = async (bookingId) => {
-    const confirmed = window.confirm('Are you sure you want to approve the extension request?');
-    if (!confirmed) return;
-
-    setMessage('');
-    setUpdatingId(bookingId);
-
-    const booking = bookings.find(b => b.id === bookingId);
-    if (!booking || !booking.extended_until) {
-      setMessage('No extension request found.');
-      setUpdatingId('');
-      return;
-    }
-
-    const newReturnDate = new Date(booking.extended_until);
-    const oldReturnDate = new Date(booking.return_at);
-    
-    const extraDays = calculateExtraDays(oldReturnDate, newReturnDate);
-    const totalPerDay = getTotalPerDay(booking.cars);
-    const extraCost = extraDays * totalPerDay;
-    const newTotal = Number(booking.total_price) + extraCost;
-
-    const { error } = await supabase
-      .from('bookings')
-      .update({
-        return_at: booking.extended_until,
-        total_price: newTotal,
-        extended_until: null,
-        extension_reason: null,
-        status: 'confirmed'
-      })
-      .eq('id', bookingId);
-
-    if (error) {
-      setMessage(error.message);
-      setUpdatingId('');
-      return;
-    }
-
-    setMessage(`Extension approved! Additional cost: ${extraCost.toLocaleString()} EGP`);
-    await loadBookings();
-    setUpdatingId('');
-  };
-
-  // رفض طلب التمديد
-  const rejectExtension = async (bookingId) => {
-    const confirmed = window.confirm('Are you sure you want to reject the extension request?');
-    if (!confirmed) return;
-
-    setMessage('');
-    setUpdatingId(bookingId);
-
-    const { error } = await supabase
-      .from('bookings')
-      .update({
-        extended_until: null,
-        extension_reason: null
-      })
-      .eq('id', bookingId);
-
-    if (error) {
-      setMessage(error.message);
-      setUpdatingId('');
-      return;
-    }
-
-    setMessage('Extension request rejected.');
     await loadBookings();
     setUpdatingId('');
   };
@@ -503,6 +465,154 @@ function AdminBookings() {
     expired: `Expired (${statusCounts.expired})`,
   };
 
+  const openExtensionModal = (booking) => {
+    setExtendingBooking(booking);
+    setExtensionDate(booking.return_at ? new Date(booking.return_at).toISOString().slice(0, 16) : '');
+    setExtensionReason(booking.extension_reason || '');
+    setShowExtensionModal(true);
+  };
+
+  const saveExtension = async () => {
+    if (!extendingBooking) return;
+    if (!extensionDate) {
+      setMessage('Please select a new return date.');
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to extend this booking until ${formatDate24(extensionDate)}?`);
+    if (!confirmed) return;
+
+    setMessage('');
+    setUpdatingId(extendingBooking.id);
+
+    const newReturnDate = new Date(extensionDate);
+    const oldReturnDate = new Date(extendingBooking.return_at);
+    
+    const extraDays = calculateExtraDays(oldReturnDate, newReturnDate);
+    const totalPerDay = getTotalPerDay(extendingBooking.cars);
+    const extraCost = extraDays * totalPerDay;
+    const newTotal = Number(extendingBooking.total_price) + extraCost;
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        return_at: newReturnDate.toISOString(),
+        total_price: newTotal,
+        extended_until: null,
+        extension_reason: null,
+        status: 'confirmed'
+      })
+      .eq('id', extendingBooking.id);
+
+    if (error) {
+      setMessage(error.message);
+      setUpdatingId('');
+      return;
+    }
+
+    setMessage(`Extension approved! New return date: ${formatDate24(extensionDate)}. Additional cost: ${extraCost.toLocaleString()} EGP`);
+    setShowExtensionModal(false);
+    setExtendingBooking(null);
+    setExtensionDate('');
+    setExtensionReason('');
+    await loadBookings();
+    setUpdatingId('');
+  };
+
+  const approveExtension = async (bookingId) => {
+    const confirmed = window.confirm('Are you sure you want to approve the extension request?');
+    if (!confirmed) return;
+
+    setMessage('');
+    setUpdatingId(bookingId);
+
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking || !booking.extended_until) {
+      setMessage('No extension request found.');
+      setUpdatingId('');
+      return;
+    }
+
+    const newReturnDate = new Date(booking.extended_until);
+    const oldReturnDate = new Date(booking.return_at);
+    
+    const extraDays = calculateExtraDays(oldReturnDate, newReturnDate);
+    const totalPerDay = getTotalPerDay(booking.cars);
+    const extraCost = extraDays * totalPerDay;
+    const newTotal = Number(booking.total_price) + extraCost;
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        return_at: booking.extended_until,
+        total_price: newTotal,
+        extended_until: null,
+        extension_reason: null,
+        status: 'confirmed'
+      })
+      .eq('id', bookingId);
+
+    if (error) {
+      setMessage(error.message);
+      setUpdatingId('');
+      return;
+    }
+
+    // 🔥 إشعار للعميل (موافقة تمديد)
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: booking.user_id,
+        type: 'extension_approved',
+        title: `Extension approved for booking #${booking.booking_number}`,
+        message: `Your booking has been extended until ${formatDate24(booking.extended_until)}`,
+        link: `/my-bookings`,
+      });
+
+    setMessage(`Extension approved! Additional cost: ${extraCost.toLocaleString()} EGP`);
+    await loadBookings();
+    setUpdatingId('');
+  };
+
+  const rejectExtension = async (bookingId) => {
+    const confirmed = window.confirm('Are you sure you want to reject the extension request?');
+    if (!confirmed) return;
+
+    setMessage('');
+    setUpdatingId(bookingId);
+
+    const booking = bookings.find(b => b.id === bookingId);
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        extended_until: null,
+        extension_reason: null
+      })
+      .eq('id', bookingId);
+
+    if (error) {
+      setMessage(error.message);
+      setUpdatingId('');
+      return;
+    }
+
+    // 🔥 إشعار للعميل (رفض تمديد)
+    await supabase
+      .from('notifications')
+      .insert({
+        user_id: booking.user_id,
+        type: 'extension_rejected',
+        title: `Extension rejected for booking #${booking.booking_number}`,
+        message: `Your extension request has been rejected.`,
+        link: `/my-bookings`,
+      });
+
+    setMessage('Extension request rejected.');
+    await loadBookings();
+    setUpdatingId('');
+  };
+
   return (
     <div className="admin-bookings-page">
       <div className="admin-bookings-header">
@@ -510,7 +620,6 @@ function AdminBookings() {
         <p>Search reservations, review customer details and manage booking status.</p>
       </div>
 
-      {/* Status Filter */}
       <div className="admin-bookings-filters">
         {Object.entries(statusLabels).map(([key, label]) => (
           <button
@@ -691,12 +800,10 @@ function AdminBookings() {
                     </button>
                   )}
 
-                  {/* زر التمديد (للأدمن) */}
                   <button className="extend-booking-admin-btn" onClick={() => openExtensionModal(booking)} disabled={updatingId === booking.id}>
                     {updatingId === booking.id ? '⏳' : '📅 Extend'}
                   </button>
 
-                  {/* أزرار الموافقة/الرفض على طلب العميل */}
                   {booking.extended_until && (
                     <>
                       <button className="approve-extension-btn" onClick={() => approveExtension(booking.id)} disabled={updatingId === booking.id}>
@@ -726,7 +833,7 @@ function AdminBookings() {
         </div>
       )}
 
-      {/* Modal التمديد */}
+      {/* Extension Modal */}
       {showExtensionModal && extendingBooking && (
         <div className="modal-overlay" onClick={() => setShowExtensionModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -761,7 +868,6 @@ function AdminBookings() {
                 <label>Price Per Day</label>
                 <input type="text" value={`${getTotalPerDay(extendingBooking.cars).toLocaleString()} EGP`} disabled style={{ opacity: 0.7 }} />
               </div>
-              {/* عرض التكلفة الإضافية */}
               {extensionDate && extendingBooking && (
                 <div className="modal-field">
                   <label>Additional Cost</label>
@@ -792,7 +898,7 @@ function AdminBookings() {
         </div>
       )}
 
-      {/* Modal Edit */}
+      {/* Edit Modal */}
       {showEditModal && editingBooking && (
         <div className="modal-overlay" onClick={closeEditModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>

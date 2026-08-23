@@ -1,6 +1,6 @@
-/* ============================================ */
-/* ===== NAVBAR ===== */
-/* ============================================ */
+/* =====================================================
+   NAVBAR - ROADEX
+===================================================== */
 
 .navbar {
   position: fixed;
@@ -21,6 +21,7 @@
   padding: 10px 0;
   border-bottom: 1px solid var(--border-color);
   box-shadow: 0 4px 30px var(--shadow-color);
+  transition: all 0.4s ease;
 }
 
 .nav-container {
@@ -32,12 +33,16 @@
   align-items: center;
 }
 
-/* ===== LOGO ===== */
+/* =====================================================
+   LOGO
+===================================================== */
+
 .logo a {
   display: flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
+  transition: all 0.3s ease;
 }
 
 .logo img {
@@ -62,7 +67,14 @@
   font-weight: 300;
 }
 
-/* ===== NAV LINKS ===== */
+.logo a:hover {
+  opacity: 0.9;
+}
+
+/* =====================================================
+   NAV LINKS
+===================================================== */
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -91,6 +103,11 @@
   background: rgba(212, 175, 55, 0.08);
 }
 
+[data-theme="light"] .nav-links a.active {
+  color: var(--gold-dark);
+  background: rgba(184, 134, 11, 0.08);
+}
+
 .nav-links a.active::after {
   content: '';
   position: absolute;
@@ -104,24 +121,15 @@
   animation: indicatorSlide 0.3s ease;
 }
 
-/* Light Mode active link */
-[data-theme="light"] .nav-links a.active {
-  color: var(--gold-dark);
-  background: rgba(184, 134, 11, 0.08);
-}
-
 @keyframes indicatorSlide {
-  from {
-    width: 0;
-    opacity: 0;
-  }
-  to {
-    width: 16px;
-    opacity: 1;
-  }
+  from { width: 0; opacity: 0; }
+  to { width: 16px; opacity: 1; }
 }
 
-/* ===== ADMIN LINK ===== */
+/* =====================================================
+   ADMIN LINK
+===================================================== */
+
 .admin-link {
   color: var(--gold) !important;
   font-weight: 600 !important;
@@ -131,7 +139,10 @@
   color: var(--gold-light) !important;
 }
 
-/* ===== LOGIN LINK ===== */
+/* =====================================================
+   LOGIN LINK
+===================================================== */
+
 .nav-login-link {
   background: var(--gold-gradient);
   color: #111 !important;
@@ -150,11 +161,14 @@
   display: none;
 }
 
-/* ===== LOGOUT BUTTON ===== */
+/* =====================================================
+   LOGOUT BUTTON
+===================================================== */
+
 .nav-logout-btn {
-  padding: 8px 18px;
+  padding: 8px 22px;
   background: transparent;
-  border: 1px solid rgba(255, 68, 68, 0.25);
+  border: 1.5px solid rgba(255, 68, 68, 0.3);
   border-radius: 8px;
   color: #ff6b6b;
   font-size: 13px;
@@ -162,17 +176,29 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: inherit;
+  letter-spacing: 0.3px;
 }
 
 .nav-logout-btn:hover {
   background: rgba(255, 68, 68, 0.08);
   border-color: #ff4444;
   transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(255, 68, 68, 0.12);
 }
 
-/* ============================================ */
-/* ===== THEME TOGGLE ===== */
-/* ============================================ */
+/* =====================================================
+   NAV ACTIONS
+===================================================== */
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* =====================================================
+   THEME TOGGLE
+===================================================== */
 
 .theme-toggle {
   display: flex;
@@ -186,7 +212,6 @@
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   color: var(--text-primary);
-  margin: 0 4px;
   flex-shrink: 0;
 }
 
@@ -210,9 +235,9 @@
   color: #b8860b;
 }
 
-/* ============================================ */
-/* ===== HAMBURGER ===== */
-/* ============================================ */
+/* =====================================================
+   HAMBURGER
+===================================================== */
 
 .hamburger {
   display: none;
@@ -248,11 +273,33 @@
   transform: translateY(-7px) rotate(-45deg);
 }
 
-/* ============================================ */
-/* ===== RESPONSIVE ===== */
-/* ============================================ */
+/* =====================================================
+   RESPONSIVE - MOBILE
+===================================================== */
 
 @media (max-width: 768px) {
+  .nav-container {
+    padding: 0 16px;
+  }
+
+  .nav-actions {
+    gap: 6px;
+  }
+
+  .theme-toggle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .theme-icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
   .nav-links {
     position: fixed;
     top: 0;
@@ -295,24 +342,31 @@
     margin-top: 4px;
   }
 
-  .theme-toggle {
-    width: 36px;
-    height: 36px;
+  .nav-links::-webkit-scrollbar {
+    width: 3px;
   }
 
-  .theme-icon {
-    width: 16px;
-    height: 16px;
+  .nav-links::-webkit-scrollbar-track {
+    background: transparent;
   }
 
-  .hamburger {
-    display: flex;
+  .nav-links::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.3);
+    border-radius: 4px;
+  }
+
+  .nav-links::-webkit-scrollbar-thumb:hover {
+    background: rgba(212, 175, 55, 0.5);
   }
 }
 
+/* =====================================================
+   RESPONSIVE - SMALL PHONES
+===================================================== */
+
 @media (max-width: 480px) {
   .nav-container {
-    padding: 0 16px;
+    padding: 0 12px;
   }
 
   .logo img {
@@ -321,18 +375,6 @@
 
   .logo-text {
     font-size: 18px;
-  }
-
-  .nav-links {
-    width: 85%;
-    max-width: 300px;
-    padding: 70px 16px 30px;
-  }
-
-  .nav-links a,
-  .nav-links .nav-logout-btn {
-    font-size: 15px;
-    padding: 10px 14px;
   }
 
   .theme-toggle {
@@ -356,5 +398,69 @@
 
   .hamburger.active span:nth-child(3) {
     transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .nav-links {
+    width: 85%;
+    max-width: 300px;
+    padding: 70px 16px 30px;
+  }
+
+  .nav-links a,
+  .nav-links .nav-logout-btn {
+    font-size: 15px;
+    padding: 10px 14px;
+  }
+}
+
+/* =====================================================
+   RESPONSIVE - EXTRA SMALL
+===================================================== */
+
+@media (max-width: 360px) {
+  .nav-container {
+    padding: 0 10px;
+  }
+
+  .logo-text {
+    font-size: 15px;
+  }
+
+  .logo img {
+    height: 24px;
+  }
+
+  .theme-toggle {
+    width: 28px;
+    height: 28px;
+  }
+
+  .theme-icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .hamburger span {
+    width: 20px;
+    height: 2px;
+  }
+
+  .hamburger.active span:nth-child(1) {
+    transform: translateY(5px) rotate(45deg);
+  }
+
+  .hamburger.active span:nth-child(3) {
+    transform: translateY(-5px) rotate(-45deg);
+  }
+
+  .nav-links {
+    max-width: 260px;
+    padding: 60px 14px 20px;
+  }
+
+  .nav-links a,
+  .nav-links .nav-logout-btn {
+    font-size: 14px;
+    padding: 8px 12px;
   }
 }

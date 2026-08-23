@@ -44,6 +44,32 @@
   transition: color 0.4s ease;
 }
 
+/* ===== Header Actions ===== */
+.admin-users-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-users-send-message-btn {
+  padding: 10px 24px;
+  background: var(--gold-gradient);
+  border: none;
+  border-radius: 8px;
+  color: #111;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.admin-users-send-message-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--gold-glow);
+  opacity: 0.9;
+}
+
 /* ===== Refresh Button ===== */
 .admin-users-refresh {
   padding: 10px 24px;
@@ -377,6 +403,61 @@
 }
 
 /* ============================================ */
+/* ===== CUSTOMER SELECT ===== */
+/* ============================================ */
+
+.customer-select-all {
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.customer-list-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customer-list-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.customer-list-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.customer-list-scroll::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border-radius: 4px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.checkbox-label:hover {
+  background: var(--bg-hover);
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+/* ============================================ */
 /* ===== MODAL ===== */
 /* ============================================ */
 
@@ -482,11 +563,11 @@
 
 .upload-grid {
   display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 12px;
+  grid-template-columns: 1fr;
+  gap: 8px;
 }
 
-.doc-type-select {
+.upload-grid input[type="file"] {
   padding: 10px 14px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -498,30 +579,8 @@
   transition: all 0.3s ease;
 }
 
-.doc-type-select:focus {
-  border-color: var(--gold);
-  outline: none;
-}
-
-.doc-type-select option {
-  background: var(--bg-card);
-  color: var(--text-primary);
-}
-
-.upload-grid input[type="file"] {
-  padding: 8px 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
 .upload-grid input[type="file"]::file-selector-button {
-  padding: 6px 16px;
+  padding: 8px 20px;
   background: var(--gold-gradient);
   border: none;
   border-radius: 6px;
@@ -529,17 +588,59 @@
   font-weight: 700;
   cursor: pointer;
   font-family: 'Montserrat', sans-serif;
-  margin-right: 12px;
+  margin-right: 14px;
+  transition: all 0.3s ease;
 }
 
 .upload-grid input[type="file"]::file-selector-button:hover {
   opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.upload-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .uploading-text {
   color: var(--gold-light);
   font-size: 13px;
   margin-top: 8px;
+}
+
+/* ===== Progress Bar ===== */
+.progress-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 8px 0;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-card);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--gold-gradient);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.progress-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-light);
+  min-width: 45px;
+  text-align: right;
 }
 
 /* ===== Documents List ===== */
@@ -675,6 +776,139 @@
   color: #fff;
 }
 
+/* ===== Modal Field ===== */
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.modal-field label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: color 0.4s ease;
+}
+
+.modal-field input,
+.modal-field select {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.modal-field input:focus,
+.modal-field select:focus {
+  border-color: var(--gold);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.modal-field input::placeholder {
+  color: var(--text-muted);
+}
+
+.modal-field textarea {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.modal-field textarea:focus {
+  border-color: var(--gold);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.modal-field textarea::placeholder {
+  color: var(--text-muted);
+}
+
+.modal-message {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.modal-message.success {
+  background: rgba(0, 204, 68, 0.06);
+  border: 1px solid #00cc44;
+  color: #00cc44;
+}
+
+.modal-message.error {
+  background: rgba(255, 68, 68, 0.06);
+  border: 1px solid #ff4444;
+  color: #ff4444;
+}
+
+/* ===== Modal Footer ===== */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--border-color);
+  transition: border-color 0.4s ease;
+}
+
+.modal-footer button {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Montserrat', sans-serif;
+  border: none;
+}
+
+.modal-footer button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-cancel {
+  background: transparent;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-secondary);
+}
+
+.modal-cancel:hover:not(:disabled) {
+  border-color: #ff4444 !important;
+  color: #ff4444;
+}
+
+.modal-save {
+  background: var(--gold-gradient);
+  color: #111;
+}
+
+.modal-save:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--gold-glow);
+  opacity: 0.9;
+}
+
 /* ============================================ */
 /* ===== RESPONSIVE ===== */
 /* ============================================ */
@@ -698,6 +932,21 @@
 
   .admin-users-header h1 {
     font-size: 28px;
+  }
+
+  .admin-users-header-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .admin-users-send-message-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .admin-users-refresh {
+    width: 100%;
+    text-align: center;
   }
 
   .admin-users-card {
@@ -766,6 +1015,10 @@
   .doc-actions {
     justify-content: flex-start;
   }
+
+  .customer-list-scroll {
+    max-height: 150px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -802,107 +1055,5 @@
 
   .doc-actions {
     flex-wrap: wrap;
-  }
-}/* ============================================ */
-/* ===== PROGRESS BAR ===== */
-/* ============================================ */
-
-.progress-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-  padding: 8px 0;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 8px;
-  background: var(--bg-card);
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-}
-
-.progress-fill {
-  height: 100%;
-  background: var(--gold-gradient);
-  border-radius: 10px;
-  transition: width 0.3s ease;
-  width: 0%;
-}
-
-.progress-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gold-light);
-  min-width: 45px;
-  text-align: right;
-}
-
-.upload-hint {
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 400;
-}
-
-/* ============================================ */
-/* ===== UPLOAD SECTION ===== */
-/* ============================================ */
-
-.upload-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
-
-.upload-grid input[type="file"] {
-  padding: 10px 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.upload-grid input[type="file"]::file-selector-button {
-  padding: 8px 20px;
-  background: var(--gold-gradient);
-  border: none;
-  border-radius: 6px;
-  color: #111;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
-  margin-right: 14px;
-  transition: all 0.3s ease;
-}
-
-.upload-grid input[type="file"]::file-selector-button:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-/* ============================================ */
-/* ===== RESPONSIVE ===== */
-/* ============================================ */
-
-@media (max-width: 768px) {
-  .upload-grid input[type="file"] {
-    font-size: 13px;
-    padding: 8px 12px;
-  }
-
-  .progress-container {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-  }
-
-  .progress-text {
-    text-align: center;
   }
 }

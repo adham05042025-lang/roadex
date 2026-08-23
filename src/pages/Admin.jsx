@@ -69,26 +69,18 @@ function Admin() {
     setLoading(false);
   };
 
-  // 🔥 Clear Old Data with Password
   const clearOldData = async () => {
     const password = prompt('🔐 Enter admin password to clear old data:');
-    
     const SECRET_PASSWORD = 'NOWAY2LOGIN@ALAA';
-    
-    if (password === null) {
-      return;
-    }
-    
+    if (password === null) return;
     if (password !== SECRET_PASSWORD) {
       alert('❌ Incorrect password! Action cancelled.');
       return;
     }
-
     const confirmed = window.confirm(
       '⚠️ Are you sure you want to delete all completed and cancelled bookings?\n\nThis action cannot be undone!'
     );
     if (!confirmed) return;
-    
     setClearing(true);
     try {
       const { data, error } = await supabase.rpc('clear_old_booking_data');
@@ -129,6 +121,8 @@ function Admin() {
     const bookingRows = bookingsResult.data || [];
     const now = new Date();
 
+    console.log('📊 All bookings:', bookingRows);
+
     const pending = bookingRows.filter((b) => b.status === 'pending').length;
     const expired = bookingRows.filter(
       (b) =>
@@ -136,32 +130,42 @@ function Admin() {
         new Date(b.return_at) < now
     ).length;
 
+    // 🔥 Revenue: من completed بس
     const revenue = bookingRows
-      .filter((b) => b.status === 'confirmed' || b.status === 'completed')
+      .filter((b) => b.status === 'completed')
       .reduce((sum, b) => sum + Number(b.total_price || 0), 0);
+    console.log('💰 Revenue (completed only):', revenue);
 
+    // 🔥 Deposit Collected: من confirmed و completed
     const depositCollected = bookingRows
       .filter((b) => b.status === 'confirmed' || b.status === 'completed')
       .reduce((sum, b) => sum + Number(b.deposit_paid || 0), 0);
+    console.log('💳 Deposit Collected:', depositCollected);
 
+    // 🔥 Pending Balance: من confirmed بس
     const pendingBalance = bookingRows
-      .filter((b) => b.status === 'confirmed' || b.status === 'completed')
+      .filter((b) => b.status === 'confirmed')
       .reduce((sum, b) => sum + Number(b.remaining_balance || 0), 0);
+    console.log('⏳ Pending Balance:', pendingBalance);
 
     const completed = bookingRows.filter((b) => b.status === 'completed').length;
 
-    setBookings(bookingRows);
-    setStats({
+    const newStats = {
       users: usersResult.count || 0,
       cars: carsResult.count || 0,
       bookings: bookingRows.length,
       pendingBookings: pending,
       expiredBookings: expired,
-      revenue,
+      revenue: revenue || 0,
       completionRate: bookingRows.length > 0 ? Math.round((completed / bookingRows.length) * 100) : 0,
-      depositCollected,
-      pendingBalance,
-    });
+      depositCollected: depositCollected || 0,
+      pendingBalance: pendingBalance || 0,
+    };
+
+    console.log('📊 New Stats Object:', newStats);
+
+    setBookings(bookingRows);
+    setStats(newStats);
   };
 
   // Revenue Data
@@ -173,7 +177,7 @@ function Admin() {
     start.setDate(start.getDate() - days);
 
     bookings
-      .filter((b) => b.status === 'confirmed' || b.status === 'completed')
+      .filter((b) => b.status === 'completed')
       .forEach((b) => {
         const d = new Date(b.created_at);
         if (d < start) return;
@@ -254,6 +258,8 @@ function Admin() {
     { value: '90d', label: '90 Days' },
   ];
 
+  console.log('🖥️ Current stats in render:', stats);
+
   if (loading) {
     return (
       <div className="admin-page">
@@ -283,22 +289,16 @@ function Admin() {
 
       {/* KPI CARDS */}
       <div className="admin-kpi-grid">
-        {/* Total Revenue */}
         <div className="kpi-card">
-          <div className="kpi-icon" style={{ background: 'rgba(212,175,55,0.15)' }}>
-            💰
-          </div>
+          <div className="kpi-icon" style={{ background: 'rgba(212,175,55,0.15)' }}>💰</div>
           <div className="kpi-content">
             <span className="kpi-label">Total Revenue</span>
             <strong className="kpi-value">{stats.revenue.toLocaleString()} EGP</strong>
           </div>
         </div>
 
-        {/* Deposit Collected */}
         <div className="kpi-card deposit">
-          <div className="kpi-icon" style={{ background: 'rgba(0,230,118,0.15)' }}>
-            💳
-          </div>
+          <div className="kpi-icon" style={{ background: 'rgba(0,230,118,0.15)' }}>💳</div>
           <div className="kpi-content">
             <span className="kpi-label">Deposit Collected</span>
             <strong className="kpi-value" style={{ color: '#00e676' }}>
@@ -308,11 +308,8 @@ function Admin() {
           </div>
         </div>
 
-        {/* Pending Balance */}
         <div className="kpi-card pending-balance">
-          <div className="kpi-icon" style={{ background: 'rgba(255,193,7,0.15)' }}>
-            ⏳
-          </div>
+          <div className="kpi-icon" style={{ background: 'rgba(255,193,7,0.15)' }}>⏳</div>
           <div className="kpi-content">
             <span className="kpi-label">Pending Balance</span>
             <strong className="kpi-value" style={{ color: '#ffc107' }}>
@@ -322,11 +319,8 @@ function Admin() {
           </div>
         </div>
 
-        {/* Total Bookings */}
         <div className="kpi-card">
-          <div className="kpi-icon" style={{ background: 'rgba(100,181,246,0.15)' }}>
-            📋
-          </div>
+          <div className="kpi-icon" style={{ background: 'rgba(100,181,246,0.15)' }}>📋</div>
           <div className="kpi-content">
             <span className="kpi-label">Total Bookings</span>
             <strong className="kpi-value">{stats.bookings}</strong>
@@ -334,22 +328,16 @@ function Admin() {
           </div>
         </div>
 
-        {/* Completion Rate */}
         <div className="kpi-card">
-          <div className="kpi-icon" style={{ background: 'rgba(156,39,176,0.15)' }}>
-            ✅
-          </div>
+          <div className="kpi-icon" style={{ background: 'rgba(156,39,176,0.15)' }}>✅</div>
           <div className="kpi-content">
             <span className="kpi-label">Completion Rate</span>
             <strong className="kpi-value">{stats.completionRate}%</strong>
           </div>
         </div>
 
-        {/* Expired Bookings */}
         <div className="kpi-card expired">
-          <div className="kpi-icon" style={{ background: 'rgba(255,68,68,0.15)' }}>
-            ⏰
-          </div>
+          <div className="kpi-icon" style={{ background: 'rgba(255,68,68,0.15)' }}>⏰</div>
           <div className="kpi-content">
             <span className="kpi-label">Expired Bookings</span>
             <strong className="kpi-value" style={{ color: '#ff6b6b' }}>
@@ -359,11 +347,8 @@ function Admin() {
           </div>
         </div>
 
-        {/* Active Users */}
         <div className="kpi-card">
-          <div className="kpi-icon" style={{ background: 'rgba(255,107,107,0.15)' }}>
-            👥
-          </div>
+          <div className="kpi-icon" style={{ background: 'rgba(255,107,107,0.15)' }}>👥</div>
           <div className="kpi-content">
             <span className="kpi-label">Active Users</span>
             <strong className="kpi-value">{stats.users}</strong>
@@ -434,10 +419,8 @@ function Admin() {
                 data={statusData}
                 dataKey="count"
                 nameKey="status"
-                cx="50%"
-                cy="45%"
-                innerRadius={55}
-                outerRadius={90}
+                cx="50%" cy="45%"
+                innerRadius={55} outerRadius={90}
                 paddingAngle={3}
                 label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                 labelLine={false}
@@ -476,25 +459,9 @@ function Admin() {
               layout="vertical"
               margin={{ top: 5, right: 20, left: 70, bottom: 5 }}
             >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.05)"
-                horizontal={false}
-              />
-              <XAxis
-                type="number"
-                tick={{ fill: '#999', fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                type="category"
-                dataKey="car"
-                tick={{ fill: '#999', fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                width={60}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+              <XAxis type="number" tick={{ fill: '#999', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="car" tick={{ fill: '#999', fontSize: 10 }} axisLine={false} tickLine={false} width={60} />
               <Tooltip
                 contentStyle={{
                   background: 'rgba(20,20,20,0.92)',
@@ -516,30 +483,10 @@ function Admin() {
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={trendData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="rgba(255,255,255,0.05)"
-                vertical={false}
-              />
-              <XAxis
-                dataKey="date"
-                tick={{ fill: '#999', fontSize: 9 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                yAxisId="left"
-                tick={{ fill: '#999', fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                yAxisId="right"
-                orientation="right"
-                tick={{ fill: '#999', fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+              <XAxis dataKey="date" tick={{ fill: '#999', fontSize: 9 }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="left" tick={{ fill: '#999', fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fill: '#999', fontSize: 10 }} axisLine={false} tickLine={false} />
               <Tooltip
                 contentStyle={{
                   background: 'rgba(20,20,20,0.92)',
@@ -548,20 +495,8 @@ function Admin() {
                   color: '#fff',
                 }}
               />
-              <Bar
-                yAxisId="left"
-                dataKey="bookings"
-                fill="rgba(212,175,55,0.3)"
-                radius={[4, 4, 0, 0]}
-              />
-              <Line
-                yAxisId="right"
-                type="monotone"
-                dataKey="revenue"
-                stroke="#FFD700"
-                strokeWidth={2.5}
-                dot={false}
-              />
+              <Bar yAxisId="left" dataKey="bookings" fill="rgba(212,175,55,0.3)" radius={[4, 4, 0, 0]} />
+              <Line yAxisId="right" type="monotone" dataKey="revenue" stroke="#FFD700" strokeWidth={2.5} dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

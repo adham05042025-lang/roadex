@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.2",
+    "cors": "^2.8.6",
     "country-flag-icons": "^1.6.20",
+    "express": "^5.2.1",
+    "nodemailer": "^9.0.5",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-icons": "^5.7.0",

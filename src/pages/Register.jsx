@@ -82,6 +82,7 @@ function Register() {
     }
 
     if (data.user) {
+      // تحديث الـ Profile بالرقم
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ phone: phone })
@@ -89,6 +90,35 @@ function Register() {
 
       if (profileError) {
         console.error('Profile update error:', profileError);
+      }
+
+      // 🔥 إشعار ترحيبي للعميل
+      const { error: welcomeError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: data.user.id,
+          type: 'welcome',
+          title: `👋 Welcome to Roadex, ${fullName.trim()}!`,
+          message: `Thank you for joining us! 🚗 Start exploring our premium fleet and book your dream car today.`,
+          link: `/cars`,
+        });
+
+      if (welcomeError) {
+        console.error('Welcome notification error:', welcomeError);
+      }
+
+      // 🔥 إشعار للأدمن (حساب جديد)
+      const { error: adminNotifError } = await supabase
+        .from('notifications')
+        .insert({
+          type: 'new_user',
+          title: `👤 New user registered: ${fullName.trim()}`,
+          message: `${fullName.trim()} (${email.trim()}) created a new account`,
+          link: `/admin/manage-users`,
+        });
+
+      if (adminNotifError) {
+        console.error('Admin notification error:', adminNotifError);
       }
     }
 

@@ -96,7 +96,7 @@ function MyBookings() {
     setMessage('Booking cancelled successfully.');
   };
 
-  // 🔥 طلب تمديد الحجز
+  // 🔥 طلب تمديد الحجز + إشعار للأدمن
   const requestExtension = async (bookingId) => {
     if (!extensionDate) {
       setMessage('Please select a new return date.');
@@ -116,12 +116,19 @@ function MyBookings() {
       return;
     }
 
-    // تحديث extended_until في قاعدة البيانات
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) {
+      setMessage('Booking not found.');
+      setExtendingId(null);
+      return;
+    }
+
+    // 🔥 تحديث extended_until في قاعدة البيانات
     const { error } = await supabase
       .from('bookings')
       .update({ 
         extended_until: new Date(extensionDate).toISOString(),
-        status: 'pending' // إعادة الحالة إلى pending عشان الأدمن يراجعها
+        status: 'pending'
       })
       .eq('id', bookingId)
       .eq('user_id', userData.user.id);
@@ -130,6 +137,22 @@ function MyBookings() {
       setMessage(error.message);
       setExtendingId(null);
       return;
+    }
+
+    // 🔥 إشعار للأدمن (طلب تمديد)
+    const { error: notifError } = await supabase
+      .from('notifications')
+      .insert({
+        type: 'extension_request',
+        title: `📝 Extension requested for booking #${booking.booking_number}`,
+        message: `Customer requested extension until ${formatDate24(extensionDate)}`,
+        link: `/admin/bookings`,
+      });
+
+    if (notifError) {
+      console.error('Extension notification error:', notifError);
+    } else {
+      console.log('✅ Extension notification sent to admin');
     }
 
     setMessage('Extension request sent! Waiting for admin approval.');

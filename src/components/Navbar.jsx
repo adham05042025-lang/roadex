@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { FaSun, FaMoon } from 'react-icons/fa';
+import Notifications from './Notifications'; // 🔥 استيراد الإشعارات
 import './Navbar.css';
 
 function Navbar({ toggleTheme, theme }) {
@@ -87,6 +88,7 @@ function Navbar({ toggleTheme, theme }) {
     <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
       <div className="nav-container">
 
+        {/* ===== LOGO ===== */}
         <div className="logo">
           <Link to="/" onClick={() => setMenuOpen(false)}>
             <img src="/logo.png" alt="Roadex" />
@@ -96,6 +98,7 @@ function Navbar({ toggleTheme, theme }) {
           </Link>
         </div>
 
+        {/* ===== NAV LINKS ===== */}
         <div className={`nav-links ${menuOpen ? 'open' : ''}`}>
 
           <Link
@@ -111,7 +114,7 @@ function Navbar({ toggleTheme, theme }) {
             className={isActive('/cars') ? 'active' : ''}
             onClick={() => setMenuOpen(false)}
           >
-            Fleet
+            Fleets
           </Link>
 
           <Link
@@ -130,6 +133,7 @@ function Navbar({ toggleTheme, theme }) {
             Contact
           </Link>
 
+          {/* Dashboard - يظهر للأدمن بس */}
           {user && isAdmin && (
             <Link
               to="/admin"
@@ -140,6 +144,7 @@ function Navbar({ toggleTheme, theme }) {
             </Link>
           )}
 
+          {/* روابط المستخدم */}
           {!user && (
             <>
               <Link
@@ -182,30 +187,39 @@ function Navbar({ toggleTheme, theme }) {
 
         </div>
 
-        {/* 🔥 Theme Toggle Button */}
-        <button
-          type="button"
-          className="theme-toggle"
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? (
-            <FaSun className="theme-icon" />
-          ) : (
-            <FaMoon className="theme-icon" />
-          )}
-        </button>
+        {/* ===== ACTIONS ===== */}
+        <div className="nav-actions">
+          
+          {/* 🔥 الإشعارات - تظهر لكل المستخدمين */}
+          <Notifications />
 
-        <button
-          type="button"
-          className={`hamburger ${menuOpen ? 'active' : ''}`}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle navigation"
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+          {/* Theme Toggle */}
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? (
+              <FaSun className="theme-icon" />
+            ) : (
+              <FaMoon className="theme-icon" />
+            )}
+          </button>
+
+          {/* Hamburger */}
+          <button
+            type="button"
+            className={`hamburger ${menuOpen ? 'active' : ''}`}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle navigation"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+
+        </div>
 
       </div>
     </nav>

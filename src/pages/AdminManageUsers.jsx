@@ -18,6 +18,14 @@ function AdminManageUsers() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
+  // State للرسائل الجماعية
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [messageSubject, setMessageSubject] = useState('');
+  const [messageBody, setMessageBody] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [sending, setSending] = useState(false);
+  const [selectAll, setSelectAll] = useState(false);
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -71,6 +79,7 @@ function AdminManageUsers() {
     setLoadingUsers(false);
   };
 
+  // تحميل مستندات المستخدم
   const loadUserDocuments = async (userId) => {
     setLoadingDocs(true);
     const { data, error } = await supabase
@@ -89,6 +98,7 @@ function AdminManageUsers() {
     setLoadingDocs(false);
   };
 
+  // فتح Modal المستندات
   const openDocsModal = async (user) => {
     setSelectedUser(user);
     setShowDocsModal(true);
@@ -96,7 +106,7 @@ function AdminManageUsers() {
     await loadUserDocuments(user.id);
   };
 
-  // 🔥 رفع مستندات متعددة مع Progress Bar
+  // رفع مستندات متعددة مع Progress Bar
   const uploadMultipleDocuments = async (userId, files) => {
     if (!files || files.length === 0) return;
 
@@ -146,8 +156,6 @@ function AdminManageUsers() {
       }
 
       showMessage(`Successfully uploaded ${uploadedCount} document(s)!`);
-
-      // تحديث القائمة مباشرة
       setUserDocuments((prev) => [...uploadedDocs, ...prev]);
 
     } catch (error) {
@@ -158,6 +166,7 @@ function AdminManageUsers() {
     }
   };
 
+  // حذف مستند
   const deleteDocument = async (docId) => {
     const confirmed = window.confirm('Are you sure you want to delete this document?');
     if (!confirmed) return;
@@ -176,6 +185,7 @@ function AdminManageUsers() {
     await loadUserDocuments(selectedUser.id);
   };
 
+  // توثيق مستند
   const verifyDocument = async (docId) => {
     const { data: userData } = await supabase.auth.getUser();
 
@@ -197,6 +207,71 @@ function AdminManageUsers() {
     await loadUserDocuments(selectedUser.id);
   };
 
+  // فتح Modal إرسال الرسائل
+  const openMessageModal = () => {
+    setSelectedUsers([]);
+    setSelectAll(false);
+    setMessageSubject('');
+    setMessageBody('');
+    setShowMessageModal(true);
+  };
+
+  // إرسال الرسائل للعملاء المختارين
+  const sendMessages = async () => {
+    if (!messageSubject.trim() || !messageBody.trim()) {
+      showMessage('Please enter both subject and message.', true);
+      return;
+    }
+
+    if (selectedUsers.length === 0 && !selectAll) {
+      showMessage('Please select at least one customer.', true);
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Send message to ${selectAll ? 'ALL customers' : selectedUsers.length + ' customer(s)'}?`
+    );
+    if (!confirmed) return;
+
+    setSending(true);
+    setMessage('');
+
+    let targetUsers = [];
+    if (selectAll) {
+      targetUsers = users.map((u) => u.id);
+    } else {
+      targetUsers = selectedUsers;
+    }
+
+    try {
+      const notifications = targetUsers.map((userId) => ({
+        user_id: userId,
+        type: 'admin_message',
+        title: messageSubject.trim(),
+        message: messageBody.trim(),
+        link: `/my-bookings`,
+      }));
+
+      const { error } = await supabase
+        .from('notifications')
+        .insert(notifications);
+
+      if (error) throw error;
+
+      showMessage(`✅ Message sent to ${targetUsers.length} customer(s) successfully!`);
+      setShowMessageModal(false);
+      setMessageSubject('');
+      setMessageBody('');
+      setSelectedUsers([]);
+      setSelectAll(false);
+    } catch (err) {
+      showMessage(err.message, true);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // 🔥 إنشاء حساب جديد (مع إشعار للأدمن)
   const handleCreateUser = async (event) => {
     event.preventDefault();
 
@@ -238,6 +313,20 @@ function AdminManageUsers() {
       showMessage(data.error, true);
       setSubmitting(false);
       return;
+    }
+
+    // 🔥 إشعار للأدمن (حساب جديد)
+    const { error: notifError } = await supabase
+      .from('notifications')
+      .insert({
+        type: 'new_user',
+        title: `👤 New user registered: ${fullName}`,
+        message: `${fullName} (${email}) created a new account`,
+        link: `/admin/manage-users`,
+      });
+
+    if (notifError) {
+      console.error('Error sending notification:', notifError);
     }
 
     showMessage('Customer account created successfully.');
@@ -287,6 +376,32 @@ function AdminManageUsers() {
     setDeletingId('');
   };
 
+  // تحديد/إلغاء تحديد كل المستخدمين
+  const toggleSelectAll = () => {
+    if (selectAll) {
+      setSelectAll(false);
+      setSelectedUsers([]);
+    } else {
+      setSelectAll(true);
+      setSelectedUsers(users.map((u) => u.id));
+    }
+  };
+
+  // تحديد/إلغاء تحديد مستخدم فردي
+  const toggleUserSelection = (userId) => {
+    if (selectAll) {
+      setSelectAll(false);
+      setSelectedUsers([userId]);
+      return;
+    }
+
+    setSelectedUsers((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
   if (loadingUsers) {
     return (
       <div className="admin-users-page">
@@ -303,14 +418,24 @@ function AdminManageUsers() {
           <p>Create new customer accounts and remove existing customers.</p>
         </div>
 
-        <button
-          type="button"
-          className="admin-users-refresh"
-          onClick={loadUsers}
-          disabled={loadingUsers}
-        >
-          {loadingUsers ? 'Loading...' : 'Refresh'}
-        </button>
+        <div className="admin-users-header-actions">
+          <button
+            type="button"
+            className="admin-users-send-message-btn"
+            onClick={openMessageModal}
+          >
+            ✉️ Send Message to Customers
+          </button>
+
+          <button
+            type="button"
+            className="admin-users-refresh"
+            onClick={loadUsers}
+            disabled={loadingUsers}
+          >
+            {loadingUsers ? 'Loading...' : 'Refresh'}
+          </button>
+        </div>
       </div>
 
       {message && (
@@ -431,7 +556,6 @@ function AdminManageUsers() {
             </div>
 
             <div className="modal-body">
-              {/* رفع مستندات متعددة */}
               <div className="upload-section">
                 <h3>Upload Documents</h3>
                 <div className="upload-grid">
@@ -451,7 +575,6 @@ function AdminManageUsers() {
                   <span className="upload-hint">You can select multiple files</span>
                 </div>
 
-                {/* Progress Bar */}
                 {uploading && (
                   <div className="progress-container">
                     <div className="progress-bar">
@@ -465,7 +588,6 @@ function AdminManageUsers() {
                 )}
               </div>
 
-              {/* قائمة المستندات */}
               <div className="docs-list">
                 <h3>Uploaded Documents</h3>
                 {loadingDocs ? (
@@ -513,6 +635,99 @@ function AdminManageUsers() {
                   ))
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal إرسال رسائل للعملاء */}
+      {showMessageModal && (
+        <div className="modal-overlay" onClick={() => setShowMessageModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>✉️ Send Message to Customers</h2>
+              <button className="modal-close" onClick={() => setShowMessageModal(false)}>×</button>
+            </div>
+
+            <div className="modal-body">
+              <div className="modal-field">
+                <label>Select Customers</label>
+                <div className="customer-select-all">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={toggleSelectAll}
+                    />
+                    Select All Customers ({users.length})
+                  </label>
+                </div>
+
+                <div className="customer-list-scroll">
+                  {users.map((user) => (
+                    <label key={user.id} className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={selectAll || selectedUsers.includes(user.id)}
+                        onChange={() => toggleUserSelection(user.id)}
+                        disabled={selectAll}
+                      />
+                      {user.full_name || 'Unnamed'} - {user.phone || 'No phone'}
+                    </label>
+                  ))}
+                </div>
+                <small className="admin-booking-hint">
+                  {selectAll
+                    ? '✅ All customers selected'
+                    : `${selectedUsers.length} customer(s) selected`}
+                </small>
+              </div>
+
+              <div className="modal-field">
+                <label>Subject</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Special Offer, Announcement, etc."
+                  value={messageSubject}
+                  onChange={(e) => setMessageSubject(e.target.value)}
+                />
+              </div>
+
+              <div className="modal-field">
+                <label>Message</label>
+                <textarea
+                  rows="5"
+                  placeholder="Write your message here..."
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  style={{ width: '100%', padding: '10px 14px', background: 'var(--bg-input)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'var(--text-primary)', fontFamily: 'Montserrat, sans-serif', fontSize: '14px', resize: 'vertical', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              {message && (
+                <div className={`modal-message ${isError ? 'error' : 'success'}`}>
+                  {message}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="modal-cancel"
+                onClick={() => setShowMessageModal(false)}
+                disabled={sending}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="modal-save"
+                onClick={sendMessages}
+                disabled={sending || (selectedUsers.length === 0 && !selectAll)}
+              >
+                {sending ? '⏳ Sending...' : '📤 Send Message'}
+              </button>
             </div>
           </div>
         </div>
