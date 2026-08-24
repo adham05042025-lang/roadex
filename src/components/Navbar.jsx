@@ -114,7 +114,7 @@ function Navbar({ toggleTheme, theme }) {
             className={isActive('/cars') ? 'active' : ''}
             onClick={() => setMenuOpen(false)}
           >
-            Fleets
+            Fleet
           </Link>
 
           <Link
