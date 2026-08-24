@@ -17,6 +17,7 @@ import Login from './pages/Login';
 import MyBookings from './pages/MyBookings';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import SEOKeywords from './pages/SEOKeywords';
 
 import Admin from './pages/Admin';
 import AdminCars from './pages/AdminCars';
@@ -24,11 +25,11 @@ import AdminBookings from './pages/AdminBookings';
 import AdminUsers from './pages/AdminUsers';
 import AdminManageUsers from './pages/AdminManageUsers';
 import AdminAddBooking from './pages/AdminAddBooking';
+import AdminContracts from './pages/AdminContracts';
 
 import './App.css';
 
 function App() {
-  // 🔥 Dark/Light Mode
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('theme');
     return saved || 'dark';
@@ -62,6 +63,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/seo-keywords" element={<SEOKeywords />} />
 
           <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           <Route path="/admin/cars" element={<AdminRoute><AdminCars /></AdminRoute>} />
@@ -69,6 +71,7 @@ function App() {
           <Route path="/admin/manage-users" element={<AdminRoute><AdminManageUsers /></AdminRoute>} />
           <Route path="/admin/add-booking" element={<AdminRoute><AdminAddBooking /></AdminRoute>} />
           <Route path="/admin/users" element={<SuperAdminRoute><AdminUsers /></SuperAdminRoute>} />
+          <Route path="/admin/contracts" element={<SuperAdminRoute><AdminContracts /></SuperAdminRoute>} />
         </Routes>
       </main>
 

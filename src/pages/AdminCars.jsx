@@ -31,7 +31,6 @@ function AdminCars() {
   }, []);
 
   useEffect(() => {
-    // فلتر السيارات حسب البحث
     if (searchTerm.trim() === '') {
       setFilteredCars(cars);
     } else {
@@ -390,7 +389,7 @@ function AdminCars() {
                   <p><strong>Category:</strong> {car.category || '—'}</p>
                   <p><strong>Type:</strong> {car.car_type || '—'}</p>
                   <p className="price"><strong>Price:</strong> {car.price_per_day} EGP/day</p>
-                  <p><strong>Driver:</strong> {car.driver_price_per_day ?? '—'} EGP/day</p>
+                  <p className="driver-price"><strong>Driver:</strong> {car.driver_price_per_day ?? '0'} EGP/day</p>
                   <p><strong>Qty:</strong> {car.quantity}</p>
                 </div>
 

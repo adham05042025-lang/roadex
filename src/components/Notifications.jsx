@@ -10,7 +10,6 @@ function Notifications() {
   const [userId, setUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // 🔥 طلب إذن الإشعارات
   useEffect(() => {
     if ('Notification' in window) {
       console.log('✅ Notification API is supported');
@@ -26,7 +25,6 @@ function Notifications() {
     }
   }, []);
 
-  // 🔥 تشغيل الصوت (مضمون 100%)
   const playNotificationSound = () => {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -76,7 +74,6 @@ function Notifications() {
     }
   };
 
-  // 🔥 إشعار النظام
   const sendSystemNotification = (title, body) => {
     try {
       if (!('Notification' in window)) {
@@ -118,7 +115,6 @@ function Notifications() {
     }
   };
 
-  // 🔥 تشغيل الإشعار (صوت + Notification)
   const triggerNotification = (title, message) => {
     console.log('🔔 Triggering notification:', title, message);
     playNotificationSound();
@@ -161,11 +157,9 @@ function Notifications() {
       
       await loadNotifications(userData.user.id, true);
 
-      // ✅ إعداد الـ Channel حسب نوع المستخدم
       let channelFilter = `user_id=eq.${userData.user.id}`;
       
       if (admin) {
-        // ✅ الأدمن يسمع كل الإشعارات الجديدة
         channelFilter = `user_id=neq.00000000-0000-0000-0000-000000000000`;
         console.log('👑 Admin mode: Listening to all notifications');
       } else {
@@ -218,7 +212,6 @@ function Notifications() {
 
       if (isAdmin) {
         console.log('🔍 Admin: Loading all notifications');
-        // الأدمن يجيب كل الإشعارات (بدون فلتر)
       } else {
         console.log('🔍 User: Loading notifications for user:', uid);
         query = query.eq('user_id', uid);

@@ -7,19 +7,43 @@ import './Booking.css';
 function Booking() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { car, pickupAt, returnAt } = location.state || {};
+  const { car, pickupAt, returnAt, withDriver } = location.state || {};
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [estimatedPrice, setEstimatedPrice] = useState(0);
   const [rentalDays, setRentalDays] = useState(1);
   const [rentalHours, setRentalHours] = useState(0);
+  const [contractTemplate, setContractTemplate] = useState('');
+  const [bookingNumber, setBookingNumber] = useState(null);
+  const [customerData, setCustomerData] = useState({
+    full_name: '',
+    phone: '',
+  });
 
   useEffect(() => {
     if (car && pickupAt && returnAt) {
       calculateEstimatedPrice();
+      loadContractFromDB();
+      getUserData();
     }
-  }, [car, pickupAt, returnAt]);
+  }, [car, pickupAt, returnAt, withDriver]);
+
+  const getUserData = async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, phone')
+        .eq('id', userData.user.id)
+        .single();
+
+      setCustomerData({
+        full_name: profile?.full_name || userData.user.email || 'Customer',
+        phone: profile?.phone || 'N/A',
+      });
+    }
+  };
 
   const calculateEstimatedPrice = () => {
     const pickup = new Date(pickupAt);
@@ -32,11 +56,80 @@ function Booking() {
     } else {
       days = Math.ceil(hours / 12);
     }
-    const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+    const totalPerDay = withDriver 
+      ? Number(car.price_per_day) + Number(car.driver_price_per_day || 0)
+      : Number(car.price_per_day);
     const totalPrice = days * totalPerDay;
     setRentalDays(days);
     setRentalHours(Math.round(hours * 10) / 10);
     setEstimatedPrice(totalPrice);
+  };
+
+  const loadContractFromDB = async () => {
+    try {
+      const contractId = withDriver 
+        ? '8156c90a-288a-4337-8115-71b97bf4c7dd'
+        : '2416a926-1eff-470c-a424-539acfff436b';
+      
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('name, template_html')
+        .eq('id', contractId)
+        .single();
+
+      if (error) {
+        console.error('❌ Error:', error);
+        return;
+      }
+
+      if (data && data.template_html) {
+        setContractTemplate(data.template_html);
+      }
+    } catch (err) {
+      console.error('❌ Error:', err);
+    }
+  };
+
+  const renderContract = (template, bookingNum) => {
+    if (!template) return '';
+
+    const depositAmount = 0;
+    const balanceAmount = estimatedPrice;
+    const now = new Date();
+    const signatureDate = now.toLocaleDateString('en-US');
+
+    let contract = template
+      .replace(/\{\{booking_number\}\}/g, bookingNum || 'N/A')
+      .replace(/\{\{signature_date\}\}/g, signatureDate)
+      .replace(/\{\{customer_name\}\}/g, customerData.full_name)
+      .replace(/\{\{customer_phone\}\}/g, customerData.phone)
+      .replace(/\{\{car_name\}\}/g, `${car?.brand || 'N/A'} ${car?.model || 'N/A'}`)
+      .replace(/\{\{plate_number\}\}/g, car?.plate_number || 'N/A')
+      .replace(/\{\{driver_name\}\}/g, car?.driver_name || 'N/A')
+      .replace(/\{\{driver_phone\}\}/g, car?.driver_phone || 'N/A')
+      .replace(/\{\{pickup_at\}\}/g, formatDate24(pickupAt))
+      .replace(/\{\{pickup_location\}\}/g, 'Cairo')
+      .replace(/\{\{total_price\}\}/g, estimatedPrice)
+      .replace(/\{\{deposit_paid\}\}/g, depositAmount)
+      .replace(/\{\{remaining_balance\}\}/g, balanceAmount);
+
+    return contract;
+  };
+
+  const openContractPopup = () => {
+    if (!contractTemplate) {
+      setMessage('Contract not available');
+      return;
+    }
+
+    const contractHtml = renderContract(contractTemplate, bookingNumber);
+    const newWindow = window.open('', '_blank', 'width=900,height=800');
+    if (newWindow) {
+      newWindow.document.write(contractHtml);
+      newWindow.document.close();
+    } else {
+      alert('Please allow popups for this site.');
+    }
   };
 
   const confirmBooking = async () => {
@@ -60,6 +153,7 @@ function Booking() {
       p_car_id: car.id,
       p_pickup_at: new Date(pickupAt).toISOString(),
       p_return_at: new Date(returnAt).toISOString(),
+      p_with_driver: withDriver,
     });
 
     if (error) {
@@ -68,28 +162,21 @@ function Booking() {
       return;
     }
 
-    console.log('✅ Booking created:', data);
+    setBookingNumber(data);
 
-    // 🔥 إشعار للأدمن (حجز جديد)
     const bookingNumber = data;
     const customerName = userData.user.user_metadata?.full_name || userData.user.email || 'Customer';
+    const driverText = withDriver ? 'with driver' : 'without driver';
 
-    const { data: notifData, error: notifError } = await supabase
+    await supabase
       .from('notifications')
       .insert({
         type: 'new_booking',
         title: `📅 New booking #${bookingNumber}`,
-        message: `${car.brand} ${car.model} booked by ${customerName}`,
+        message: `${car.brand} ${car.model} booked by ${customerName} (${driverText})`,
         link: `/admin/bookings`,
       })
       .select();
-
-    if (notifError) {
-      console.error('❌ Notification error:', notifError);
-      console.error('Error details:', notifError.message);
-    } else {
-      console.log('✅ Notification sent to admin:', notifData);
-    }
 
     setLoading(false);
 
@@ -113,7 +200,9 @@ function Booking() {
     );
   }
 
-  const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+  const totalPerDay = withDriver 
+    ? Number(car.price_per_day) + Number(car.driver_price_per_day || 0)
+    : Number(car.price_per_day);
 
   return (
     <div className="booking-page">
@@ -132,10 +221,18 @@ function Booking() {
           <div className="booking-car-info">
             <h2>{car.brand} {car.model}</h2>
             <p>Year: {car.year}</p>
+            <div className="booking-driver-info">
+              <span className={`driver-badge ${withDriver ? 'with-driver' : 'without-driver'}`}>
+                {withDriver ? 'With Driver' : 'Without Driver'}
+              </span>
+            </div>
             <p className="booking-price">
               {totalPerDay.toLocaleString()} EGP / day
               <small style={{ fontSize: '11px', color: '#888', display: 'block' }}>
-                (Car + Driver) — 12 hours = 1 day
+                {withDriver 
+                  ? `Car + Driver — 12 hours = 1 day`
+                  : `Car only — 12 hours = 1 day`
+                }
               </small>
             </p>
           </div>
@@ -155,6 +252,11 @@ function Booking() {
           </div>
 
           <div className="booking-summary-row">
+            <span>Driver</span>
+            <strong>{withDriver ? 'Yes (+ driver)' : 'No'}</strong>
+          </div>
+
+          <div className="booking-summary-row">
             <span>Total Duration</span>
             <strong>{rentalHours} hours</strong>
           </div>
@@ -171,7 +273,9 @@ function Booking() {
             <span>Price Per Day</span>
             <strong>
               {totalPerDay.toLocaleString()} EGP
-              <small style={{ fontSize: '11px', color: '#888', display: 'block' }}>(Car + Driver)</small>
+              <small style={{ fontSize: '11px', color: '#888', display: 'block' }}>
+                {withDriver ? '(Car + Driver)' : '(Car only)'}
+              </small>
             </strong>
           </div>
 
@@ -185,11 +289,19 @@ function Booking() {
             <strong>{estimatedPrice.toLocaleString()} EGP</strong>
           </div>
 
+          <button
+            type="button"
+            className="view-contract-btn"
+            onClick={openContractPopup}
+          >
+            📄 View Contract
+          </button>
+
           <p className="booking-note">
             The final price is calculated securely by the database when the booking is confirmed.
             <br />
             <small style={{ color: '#888' }}>
-              Note: 12 hours = 1 rental day. Price includes Car + Driver.
+              Note: 12 hours = 1 rental day.
             </small>
           </p>
 

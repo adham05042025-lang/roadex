@@ -471,4 +471,101 @@
   .booking-date-section h2 {
     font-size: 16px;
   }
+}/* Driver Toggle Section */
+.driver-toggle-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  margin: 10px 0;
+}
+
+.driver-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.driver-toggle-switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+}
+
+.driver-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.driver-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 34px;
+}
+
+.driver-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+.driver-toggle-switch input:checked + .driver-toggle-slider {
+  background-color: #2196F3;
+}
+
+.driver-toggle-switch input:checked + .driver-toggle-slider:before {
+  transform: translateX(24px);
+}
+
+.driver-price-info {
+  margin-left: auto;
+}
+
+.driver-price-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Dark/Light mode support */
+[data-theme="dark"] .driver-toggle-slider {
+  background-color: #555;
+}
+
+[data-theme="dark"] .driver-toggle-switch input:checked + .driver-toggle-slider {
+  background-color: #4CAF50;
+}
+
+[data-theme="light"] .driver-toggle-section {
+  border-color: #ddd;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .driver-toggle-section {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .driver-price-info {
+    margin-left: 0;
+    width: 100%;
+  }
 }

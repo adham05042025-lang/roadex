@@ -39,7 +39,9 @@ function MyBookings() {
         total_price,
         created_at,
         extended_until,
-        cars (brand, model, year, image_url)
+        with_driver,
+        driver_price_per_day,
+        cars (brand, model, year, image_url, price_per_day, driver_price_per_day)
       `)
       .eq('user_id', userData.user.id)
       .order('created_at', { ascending: false });
@@ -50,6 +52,7 @@ function MyBookings() {
       return;
     }
 
+    console.log('📋 My bookings:', data);
     setBookings(data || []);
     setLoading(false);
   };
@@ -57,6 +60,34 @@ function MyBookings() {
   const isExpired = (returnAt, status) => {
     const now = new Date();
     return (status === 'pending' || status === 'confirmed') && new Date(returnAt) < now;
+  };
+
+  const getDriverStatus = (booking) => {
+    if (!booking.cars) return 'N/A';
+    // استخدام with_driver من الحجز نفسه
+    if (booking.with_driver) {
+      return 'With Driver';
+    }
+    return 'Without Driver';
+  };
+
+  const getTotalPerDay = (booking) => {
+    if (!booking.cars) return 0;
+    if (booking.with_driver) {
+      return Number(booking.cars.price_per_day || 0) + Number(booking.cars.driver_price_per_day || 0);
+    }
+    return Number(booking.cars.price_per_day || 0);
+  };
+
+  const calculateRentalDays = (pickupAt, returnAt) => {
+    if (!pickupAt || !returnAt) return 0;
+    const pickup = new Date(pickupAt);
+    const returnDate = new Date(returnAt);
+    const difference = returnDate - pickup;
+    const hours = difference / (1000 * 60 * 60);
+    if (difference <= 0) return 0;
+    if (hours <= 12) return 1;
+    return Math.ceil(hours / 12);
   };
 
   const cancelBooking = async (bookingId) => {
@@ -96,7 +127,6 @@ function MyBookings() {
     setMessage('Booking cancelled successfully.');
   };
 
-  // 🔥 طلب تمديد الحجز + إشعار للأدمن
   const requestExtension = async (bookingId) => {
     if (!extensionDate) {
       setMessage('Please select a new return date.');
@@ -123,7 +153,6 @@ function MyBookings() {
       return;
     }
 
-    // 🔥 تحديث extended_until في قاعدة البيانات
     const { error } = await supabase
       .from('bookings')
       .update({ 
@@ -139,7 +168,6 @@ function MyBookings() {
       return;
     }
 
-    // 🔥 إشعار للأدمن (طلب تمديد)
     const { error: notifError } = await supabase
       .from('notifications')
       .insert({
@@ -193,6 +221,9 @@ function MyBookings() {
         {bookings.map((booking) => {
           const expired = isExpired(booking.return_at, booking.status);
           const canExtend = expired && (booking.status === 'pending' || booking.status === 'confirmed');
+          const driverStatus = getDriverStatus(booking);
+          const totalPerDay = getTotalPerDay(booking);
+          const rentalDays = calculateRentalDays(booking.pickup_at, booking.return_at);
           
           return (
             <article className={`my-booking-card ${expired ? 'expired' : ''}`} key={booking.id}>
@@ -214,6 +245,13 @@ function MyBookings() {
                     {expired && <span className="my-booking-status expired">⚠️ Expired</span>}
                   </div>
                 </div>
+
+                <div className="my-booking-driver-status">
+                  <span className={`driver-badge ${driverStatus === 'With Driver' ? 'with-driver' : 'without-driver'}`}>
+                    {driverStatus}
+                  </span>
+                </div>
+
                 <div className="my-booking-details">
                   <div className="my-booking-detail">
                     <span>Car Year</span>
@@ -234,13 +272,20 @@ function MyBookings() {
                       <small style={{ color: '#ffc107' }}>Extension requested: {formatDate24(booking.extended_until)}</small>
                     )}
                   </div>
+                  <div className="my-booking-detail">
+                    <span>Rental Days</span>
+                    <strong>{rentalDays} days <small style={{ color: '#888', fontSize: '10px' }}>(12h = 1 day)</small></strong>
+                  </div>
+                  <div className="my-booking-detail">
+                    <span>Price Per Day</span>
+                    <strong>{totalPerDay.toLocaleString()} EGP</strong>
+                  </div>
                   <div className="my-booking-detail total">
                     <span>Total Price</span>
                     <strong>{Number(booking.total_price || 0).toLocaleString()} EGP</strong>
                   </div>
                 </div>
 
-                {/* 🔥 زر طلب التمديد */}
                 {canExtend && (
                   <div className="extension-section">
                     <div className="extension-input-group">

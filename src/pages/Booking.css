@@ -411,4 +411,113 @@
   .booking-empty button {
     width: 100%;
   }
+}/* Driver Badge */
+.booking-driver-info {
+  margin: 8px 0;
+}
+
+.driver-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.driver-badge.with-driver {
+  background: #4CAF5020;
+  color: #4CAF50;
+  border: 1px solid #4CAF50;
+}
+
+.driver-badge.without-driver {
+  background: #88888820;
+  color: #888;
+  border: 1px solid #888;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .driver-badge.with-driver {
+  background: #4CAF5030;
+  color: #66BB6A;
+}
+
+[data-theme="dark"] .driver-badge.without-driver {
+  background: #66666630;
+  color: #999;
+}
+/* Contract Preview */
+.contract-preview {
+  margin-top: 20px;
+  padding: 15px;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.contract-preview h3 {
+  margin: 0 0 10px 0;
+  color: var(--text-primary);
+}
+
+.contract-content {
+  max-height: 400px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  padding: 10px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.contract-content h1 {
+  font-size: 1.2rem;
+  text-align: center;
+  margin: 10px 0;
+}
+
+.contract-content h2 {
+  font-size: 1rem;
+  margin: 10px 0 5px 0;
+}
+
+.contract-content ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.contract-content li {
+  margin: 2px 0;
+}
+
+.contract-content hr {
+  margin: 15px 0;
+  border: 1px solid var(--border-color);
+}/* View Contract Button */
+.view-contract-btn {
+  width: 100%;
+  padding: 12px;
+  background: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 10px 0;
+}
+
+.view-contract-btn:hover {
+  background: #F57C00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+}
+
+/* Remove contract preview from summary */
+.contract-preview {
+  display: none;
 }

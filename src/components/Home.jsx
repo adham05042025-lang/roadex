@@ -1,7 +1,34 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase';
 import './Home.css';
 
 function Home() {
+  const navigate = useNavigate();
+  const [cars, setCars] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadCars();
+  }, []);
+
+  const loadCars = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('cars')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading cars:', error);
+      setLoading(false);
+      return;
+    }
+
+    setCars(data || []);
+    setLoading(false);
+  };
+
   return (
     <div className="home-page">
 
@@ -125,6 +152,64 @@ function Home() {
 
         </div>
 
+      </section>
+
+
+      {/* =========================
+          FLEET PREVIEW - Popular Vehicles
+      ========================= */}
+      <section className="fleet-preview">
+        <div className="section-header">
+          <span className="section-eyebrow">OUR FLEET</span>
+          <h2>Popular <span>Vehicles</span></h2>
+          <p>Discover our most popular cars for your journey</p>
+        </div>
+
+        {loading ? (
+          <div className="fleet-loading">Loading cars...</div>
+        ) : cars.length === 0 ? (
+          <div className="fleet-empty">No cars available</div>
+        ) : (
+          <div className="fleet-grid">
+            {cars.slice(0, 6).map((car) => {
+              // 🔥 السعر بدون سائق فقط
+              const displayPrice = Number(car.price_per_day);
+
+              return (
+                <div
+                  key={car.id}
+                  className="fleet-card"
+                  onClick={() => navigate(`/car/${car.id}`)}
+                >
+                  {car.image_url ? (
+                    <img src={car.image_url} alt={`${car.brand} ${car.model}`} />
+                  ) : (
+                    <div className="fleet-no-image">No Image</div>
+                  )}
+                  <div className="fleet-card-content">
+                    <h3>{car.brand} {car.model}</h3>
+                    <p className="fleet-price">
+                      {displayPrice.toLocaleString()} EGP
+                      <span>/ day</span>
+                    </p>
+                    <div className="fleet-tags">
+                      <span>{car.category}</span>
+                      <span>{car.car_type}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {!loading && cars.length > 0 && (
+          <div className="fleet-view-all">
+            <Link to="/cars" className="btn-primary">
+              View All Vehicles
+            </Link>
+          </div>
+        )}
       </section>
 
 

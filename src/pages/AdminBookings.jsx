@@ -28,6 +28,7 @@ function AdminBookings() {
     return_at: '',
     status: '',
     total_price: '',
+    with_driver: false,
   });
 
   const [showExtensionModal, setShowExtensionModal] = useState(false);
@@ -114,6 +115,8 @@ function AdminBookings() {
         contract_url,
         extended_until,
         extension_reason,
+        with_driver,
+        driver_price_per_day,
         cars (
           id,
           brand,
@@ -170,7 +173,38 @@ function AdminBookings() {
     return (status === 'pending' || status === 'confirmed') && new Date(returnAt) < now;
   };
 
-  // 🔥 updateStatus مع الإشعارات
+  const deleteBooking = async (bookingId) => {
+    const confirmed = window.confirm(
+      '⚠️ Are you sure you want to permanently delete this booking?\n\n' +
+      'This action cannot be undone!\n' +
+      'All related data (contract, notifications, etc.) will be removed.'
+    );
+    if (!confirmed) return;
+
+    setMessage('');
+    setUpdatingId(bookingId);
+
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', bookingId);
+
+      if (error) {
+        setMessage('Error deleting booking: ' + error.message);
+        setUpdatingId('');
+        return;
+      }
+
+      setMessage('✅ Booking deleted successfully!');
+      await loadBookings();
+    } catch (err) {
+      setMessage('Error: ' + err.message);
+    } finally {
+      setUpdatingId('');
+    }
+  };
+
   const updateStatus = async (bookingId, newStatus) => {
     setMessage('');
     
@@ -188,7 +222,7 @@ function AdminBookings() {
     
     const { data: booking, error: fetchError } = await supabase
       .from('bookings')
-      .select('total_price, deposit_paid, remaining_balance, booking_number, status, user_id')
+      .select('total_price, deposit_paid, remaining_balance, booking_number, status, user_id, car_id, with_driver')
       .eq('id', bookingId)
       .single();
       
@@ -201,7 +235,6 @@ function AdminBookings() {
     const oldStatus = booking.status;
     const bookingNumber = booking.booking_number;
     
-    // جلب اسم السيارة
     const carData = await supabase
       .from('cars')
       .select('brand, model')
@@ -242,7 +275,6 @@ function AdminBookings() {
       return;
     }
     
-    // 🔥 إشعار للأدمن (تغيير حالة)
     await supabase
       .from('notifications')
       .insert({
@@ -252,7 +284,6 @@ function AdminBookings() {
         link: `/admin/bookings`,
       });
 
-    // 🔥 إشعار للعميل صاحب الطلب بس (حسب الحالة الجديدة)
     let notifType = 'status_change';
     let notifTitle = `Your booking #${bookingNumber} is ${newStatus}`;
     let notifMessage = `Your booking for ${carName} is now ${newStatus}`;
@@ -296,19 +327,54 @@ function AdminBookings() {
     setMessage('');
     setUpdatingId(booking.id);
     try {
-      const { data, error } = await supabase
-        .rpc('generate_contract', {
-          p_booking_id: booking.id,
-        });
-      if (error) {
-        setMessage(error.message);
+      // جلب العقد المناسب من جدول contracts
+      const contractName = booking.with_driver ? 'With Driver Contract' : 'Without Driver Contract';
+      
+      const { data: contractData, error: contractError } = await supabase
+        .from('contracts')
+        .select('template_html')
+        .eq('name', contractName)
+        .eq('is_active', true)
+        .single();
+
+      if (contractError) {
+        // لو مفيش عقد matching، استخدم الـ contract_url القديم
+        if (booking.contract_url) {
+          const newWindow = window.open('', '_blank');
+          if (newWindow) {
+            newWindow.document.write(booking.contract_url);
+            newWindow.document.close();
+          } else {
+            setMessage('Please allow popups for this site.');
+          }
+          setUpdatingId('');
+          return;
+        }
+        setMessage(contractError.message);
         setUpdatingId('');
         return;
       }
-      if (data) {
+
+      if (contractData && contractData.template_html) {
+        // استبدال المتغيرات في العقد
+        let contractHtml = contractData.template_html
+          .replace(/\{\{booking_number\}\}/g, booking.booking_number || 'N/A')
+          .replace(/\{\{signature_date\}\}/g, new Date().toLocaleDateString('en-US'))
+          .replace(/\{\{customer_name\}\}/g, booking.customer?.full_name || 'N/A')
+          .replace(/\{\{customer_phone\}\}/g, booking.customer?.phone || 'N/A')
+          .replace(/\{\{car_name\}\}/g, `${booking.cars?.brand || 'N/A'} ${booking.cars?.model || 'N/A'}`)
+          .replace(/\{\{plate_number\}\}/g, booking.plate_number || 'N/A')
+          .replace(/\{\{driver_name\}\}/g, booking.driver_name || 'N/A')
+          .replace(/\{\{driver_phone\}\}/g, booking.driver_phone || 'N/A')
+          .replace(/\{\{pickup_at\}\}/g, formatDate24(booking.pickup_at))
+          .replace(/\{\{pickup_location\}\}/g, 'Cairo')
+          .replace(/\{\{total_price\}\}/g, booking.total_price || 0)
+          .replace(/\{\{deposit_paid\}\}/g, booking.deposit_paid || 0)
+          .replace(/\{\{remaining_balance\}\}/g, booking.remaining_balance || 0);
+
         const newWindow = window.open('', '_blank');
         if (newWindow) {
-          newWindow.document.write(data);
+          newWindow.document.write(contractHtml);
           newWindow.document.close();
         } else {
           setMessage('Please allow popups for this site.');
@@ -341,6 +407,7 @@ function AdminBookings() {
       return_at: booking.return_at ? booking.return_at.slice(0, 16) : '',
       status: booking.status || 'pending',
       total_price: booking.total_price || '',
+      with_driver: booking.with_driver || false,
     });
     setShowEditModal(true);
   };
@@ -360,6 +427,7 @@ function AdminBookings() {
       return_at: '',
       status: '',
       total_price: '',
+      with_driver: false,
     });
   };
 
@@ -381,6 +449,7 @@ function AdminBookings() {
     const total = calculatedTotal > 0 ? calculatedTotal : Number(editForm.total_price) || 0;
     const deposit = Number(editForm.deposit_paid) || 0;
     const remaining = total - deposit;
+    
     const { error } = await supabase
       .from('bookings')
       .update({
@@ -395,6 +464,7 @@ function AdminBookings() {
         return_at: new Date(editForm.return_at).toISOString(),
         status: editForm.status,
         total_price: total,
+        with_driver: editForm.with_driver,
       })
       .eq('id', editingBooking.id);
     if (error) {
@@ -558,7 +628,6 @@ function AdminBookings() {
       return;
     }
 
-    // 🔥 إشعار للعميل (موافقة تمديد)
     await supabase
       .from('notifications')
       .insert({
@@ -597,7 +666,6 @@ function AdminBookings() {
       return;
     }
 
-    // 🔥 إشعار للعميل (رفض تمديد)
     await supabase
       .from('notifications')
       .insert({
@@ -611,6 +679,13 @@ function AdminBookings() {
     setMessage('Extension request rejected.');
     await loadBookings();
     setUpdatingId('');
+  };
+
+  const getDriverStatus = (booking) => {
+    if (booking.with_driver === true) {
+      return 'With Driver';
+    }
+    return 'Without Driver';
   };
 
   return (
@@ -674,6 +749,7 @@ function AdminBookings() {
         <div className="admin-bookings-list">
           {visibleBookings.map((booking) => {
             const expired = isExpired(booking.return_at, booking.status);
+            const driverStatus = getDriverStatus(booking);
             return (
               <div className={`admin-booking-card ${expired ? 'expired' : ''}`} key={booking.id}>
                 <div className="admin-booking-header">
@@ -719,6 +795,12 @@ function AdminBookings() {
                       <span>Driver Phone</span>
                       <strong>{booking.driver_phone || 'N/A'}</strong>
                     </div>
+                    <div className="booking-detail-box">
+                      <span>Driver Status</span>
+                      <strong className={`driver-status ${driverStatus === 'With Driver' ? 'with-driver' : 'without-driver'}`}>
+                        {driverStatus}
+                      </strong>
+                    </div>
                   </div>
                 </div>
 
@@ -761,7 +843,9 @@ function AdminBookings() {
                       <span>Price Per Day</span>
                       <strong>
                         {getTotalPerDay(booking.cars).toLocaleString()} EGP
-                        <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>(Car + Driver)</small>
+                        <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>
+                          Car: {Number(booking.cars?.price_per_day || 0).toLocaleString()} + Driver: {Number(booking.cars?.driver_price_per_day || 0).toLocaleString()} EGP
+                        </small>
                       </strong>
                     </div>
                     <div className="booking-detail-box">
@@ -821,6 +905,16 @@ function AdminBookings() {
                   <button className="edit-booking-btn" onClick={() => openEditModal(booking)}>
                     ✏️ Edit All
                   </button>
+
+                  <button 
+                    className="delete-booking-btn" 
+                    onClick={() => deleteBooking(booking.id)} 
+                    disabled={updatingId === booking.id}
+                    title="Permanently delete this booking"
+                  >
+                    {updatingId === booking.id ? '⏳' : '🗑️ Delete'}
+                  </button>
+
                   {booking.status === 'completed' && <div className="booking-final-state">✅ Completed</div>}
                   {booking.status === 'cancelled' && <div className="booking-final-state cancelled">❌ Cancelled</div>}
                   {expired && booking.status !== 'completed' && booking.status !== 'cancelled' && (
@@ -833,7 +927,6 @@ function AdminBookings() {
         </div>
       )}
 
-      {/* Extension Modal */}
       {showExtensionModal && extendingBooking && (
         <div className="modal-overlay" onClick={() => setShowExtensionModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -898,7 +991,6 @@ function AdminBookings() {
         </div>
       )}
 
-      {/* Edit Modal */}
       {showEditModal && editingBooking && (
         <div className="modal-overlay" onClick={closeEditModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -956,6 +1048,13 @@ function AdminBookings() {
               <div className="modal-field">
                 <label>Return Date & Time</label>
                 <input type="datetime-local" value={editForm.return_at} onChange={(e) => setEditForm({ ...editForm, return_at: e.target.value })} />
+              </div>
+              <div className="modal-field">
+                <label>With Driver</label>
+                <select value={editForm.with_driver} onChange={(e) => setEditForm({ ...editForm, with_driver: e.target.value === 'true' })}>
+                  <option value="false">Without Driver</option>
+                  <option value="true">With Driver</option>
+                </select>
               </div>
               <div className="modal-field">
                 <label>Status</label>

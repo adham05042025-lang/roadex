@@ -1,0 +1,154 @@
+/* =========================
+   SEO KEYWORDS PAGE
+========================= */
+.seo-keywords-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  padding: 40px 20px;
+}
+
+.seo-content {
+  max-width: 900px;
+  margin: 0 auto;
+  background: var(--bg-secondary);
+  padding: 50px 60px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.seo-content h1 {
+  font-size: 2.5rem;
+  color: var(--text-primary);
+  margin-bottom: 20px;
+  line-height: 1.3;
+}
+
+.seo-content h1::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: #d4af37;
+  margin-top: 10px;
+}
+
+.seo-content h2 {
+  font-size: 1.6rem;
+  color: var(--text-primary);
+  margin: 35px 0 15px 0;
+}
+
+.seo-content p {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.seo-content ul {
+  padding-left: 25px;
+  margin: 15px 0 20px 0;
+}
+
+.seo-content ul li {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+/* =========================
+   KEYWORDS BOX
+========================= */
+.seo-keywords-box {
+  margin-top: 40px;
+  padding: 25px 30px;
+  background: var(--bg-primary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.seo-keywords-box h3 {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  margin-bottom: 15px;
+}
+
+.keywords-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.keywords-tags span {
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+.keywords-tags span:hover {
+  background: #d4af37;
+  color: #111;
+  border-color: #d4af37;
+}
+
+/* =========================
+   DARK MODE
+========================= */
+[data-theme="dark"] .seo-content {
+  background: #1a1a2e;
+}
+
+[data-theme="dark"] .seo-keywords-box {
+  background: #0d0d1a;
+}
+
+[data-theme="dark"] .keywords-tags span {
+  background: #1a1a2e;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .seo-content {
+    padding: 30px 20px;
+  }
+
+  .seo-content h1 {
+    font-size: 1.8rem;
+  }
+
+  .seo-content h2 {
+    font-size: 1.3rem;
+  }
+
+  .seo-content p,
+  .seo-content ul li {
+    font-size: 0.95rem;
+  }
+
+  .seo-keywords-box {
+    padding: 20px;
+  }
+
+  .keywords-tags span {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .seo-content h1 {
+    font-size: 1.4rem;
+  }
+
+  .seo-keywords-box {
+    padding: 15px;
+  }
+}

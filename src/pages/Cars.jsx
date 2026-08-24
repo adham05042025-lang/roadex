@@ -122,7 +122,9 @@ function Cars() {
 
         {!loading &&
           filteredCars.map((car) => {
-            const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+            // 🔥 السعر المعروض (بدون سائق)
+            const displayPrice = Number(car.price_per_day);
+
             return (
               <div className="car-card" key={car.id}>
 
@@ -152,15 +154,15 @@ function Cars() {
                     {car.car_type && <span>{car.car_type}</span>}
                   </div>
 
-                  {/* 🔥 Price شامل (Car + Driver + Fuel) */}
+                  {/* 🔥 Price (بدون سائق) */}
                   <div className="car-prices">
                     <div>
                       <span>Price Per Day</span>
                       <strong>
-                        {totalPerDay.toLocaleString()} EGP
+                        {displayPrice.toLocaleString()} EGP
                         <small>/day</small>
                         <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>
-                          (Car + Driver + Fuel Included)
+                          (Car only)
                         </small>
                       </strong>
                     </div>

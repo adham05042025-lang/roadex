@@ -1146,4 +1146,72 @@
     font-size: 9px;
     padding: 2px 8px;
   }
+}/* Driver Status Styling */
+.driver-status {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.driver-status.with-driver {
+  background: #4CAF5020;
+  color: #4CAF50;
+  border: 1px solid #4CAF50;
+}
+
+.driver-status.without-driver {
+  background: #88888820;
+  color: #888;
+  border: 1px solid #888;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .driver-status.with-driver {
+  background: #4CAF5030;
+  color: #66BB6A;
+}
+
+[data-theme="dark"] .driver-status.without-driver {
+  background: #66666630;
+  color: #999;
+}
+
+/* Price breakdown styling */
+.booking-detail-box .price-breakdown {
+  font-size: 10px;
+  color: #888;
+  display: block;
+  margin-top: 2px;
+}/* Delete Button */
+.delete-booking-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.delete-booking-btn:hover:not(:disabled) {
+  background: #c82333;
+  transform: scale(1.05);
+}
+
+.delete-booking-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .delete-booking-btn {
+  background: #dc3545;
+}
+
+[data-theme="dark"] .delete-booking-btn:hover:not(:disabled) {
+  background: #a71d2a;
 }

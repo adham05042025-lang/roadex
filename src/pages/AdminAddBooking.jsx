@@ -25,6 +25,7 @@ function AdminAddBooking() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
+  const [withDriver, setWithDriver] = useState(false);
 
   useEffect(() => {
     loadPageData();
@@ -137,16 +138,18 @@ function AdminAddBooking() {
     return Math.ceil(hours / 12);
   }, [pickupAt, returnAt]);
 
-  const estimatedPrice = useMemo(() => {
-    if (!selectedCar || estimatedDays === 0) return 0;
-    const totalPerDay = Number(selectedCar.price_per_day) + Number(selectedCar.driver_price_per_day || 0);
-    return estimatedDays * totalPerDay;
-  }, [selectedCar, estimatedDays]);
-
   const totalPerDay = useMemo(() => {
     if (!selectedCar) return 0;
-    return Number(selectedCar.price_per_day) + Number(selectedCar.driver_price_per_day || 0);
-  }, [selectedCar]);
+    if (withDriver) {
+      return Number(selectedCar.price_per_day) + Number(selectedCar.driver_price_per_day || 0);
+    }
+    return Number(selectedCar.price_per_day);
+  }, [selectedCar, withDriver]);
+
+  const estimatedPrice = useMemo(() => {
+    if (!selectedCar || estimatedDays === 0) return 0;
+    return estimatedDays * totalPerDay;
+  }, [selectedCar, estimatedDays, totalPerDay]);
 
   const minimumDateTime = useMemo(() => {
     const now = new Date();
@@ -177,12 +180,12 @@ function AdminAddBooking() {
       return;
     }
     let driverId = null;
-    if (driverName.trim() && driverPhone.trim()) {
+    if (withDriver && driverName.trim() && driverPhone.trim()) {
       const savedDriver = await saveDriverIfNew(driverName, driverPhone);
       if (savedDriver) driverId = savedDriver.id;
     }
     const confirmed = window.confirm(
-      `Create this booking?\n\nCustomer: ${selectedCustomer?.full_name || 'Selected customer'}\nCar: ${selectedCar ? `${selectedCar.brand} ${selectedCar.model}` : 'Selected car'}\nDriver: ${driverName || 'Not assigned'}\nEstimated total: ${estimatedPrice.toLocaleString()} EGP`
+      `Create this booking?\n\nCustomer: ${selectedCustomer?.full_name || 'Selected customer'}\nCar: ${selectedCar ? `${selectedCar.brand} ${selectedCar.model}` : 'Selected car'}\nDriver: ${withDriver ? (driverName || 'Not assigned') : 'No driver'}\nEstimated total: ${estimatedPrice.toLocaleString()} EGP`
     );
     if (!confirmed) return;
     setSubmitting(true);
@@ -191,8 +194,8 @@ function AdminAddBooking() {
       p_car_id: carId,
       p_pickup_at: pickupDate.toISOString(),
       p_return_at: returnDate.toISOString(),
-      p_driver_name: driverName.trim() || null,
-      p_driver_phone: driverPhone.trim() || null,
+      p_driver_name: withDriver ? (driverName.trim() || null) : null,
+      p_driver_phone: withDriver ? (driverPhone.trim() || null) : null,
       p_customer_extra_phone: customerExtraPhone.trim() || null,
     });
     if (error) {
@@ -209,6 +212,7 @@ function AdminAddBooking() {
     setDriverPhone('');
     setCustomerExtraPhone('');
     setShowDriverSuggestions(false);
+    setWithDriver(false);
     setSubmitting(false);
   };
 
@@ -261,10 +265,11 @@ function AdminAddBooking() {
             <select id="booking-car" value={carId} onChange={(e) => { setCarId(e.target.value); setMessage(''); }} required>
               <option value="">Select a car</option>
               {cars.map((car) => {
-                const total = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+                const carOnly = Number(car.price_per_day);
+                const withDriverPrice = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
                 return (
                   <option key={car.id} value={car.id}>
-                    {car.brand} {car.model} — {total.toLocaleString()} EGP/day (Car + Driver) — Qty: {car.quantity}
+                    {car.brand} {car.model} — {carOnly.toLocaleString()} EGP/day (Car) / {withDriverPrice.toLocaleString()} EGP/day (Car + Driver) — Qty: {car.quantity}
                   </option>
                 );
               })}
@@ -272,50 +277,80 @@ function AdminAddBooking() {
             {cars.length === 0 && <small className="admin-booking-warning">No cars with available stock were found.</small>}
           </div>
 
-          <div className="admin-booking-field driver-field">
-            <label htmlFor="driver-name">Driver Name</label>
-            <div className="driver-input-wrapper">
-              <input
-                id="driver-name"
-                ref={driverInputRef}
-                type="text"
-                placeholder="Start typing driver name..."
-                value={driverName}
-                onChange={(e) => { setDriverName(e.target.value); setMessage(''); }}
-                onKeyDown={handleKeyDown}
-                onFocus={() => {
-                  if (driverName.trim().length > 0) {
-                    const filtered = drivers.filter((d) => d.name.toLowerCase().includes(driverName.toLowerCase()));
-                    if (filtered.length > 0) { setFilteredDrivers(filtered); setShowDriverSuggestions(true); }
-                  }
-                }}
-                onBlur={() => setTimeout(() => setShowDriverSuggestions(false), 200)}
-                autoComplete="off"
-              />
-              {showDriverSuggestions && filteredDrivers.length > 0 && (
-                <div className="driver-suggestions">
-                  {filteredDrivers.map((driver, index) => (
-                    <div
-                      key={driver.id}
-                      ref={(el) => (suggestionRefs.current[index] = el)}
-                      className={`driver-suggestion-item ${index === selectedDriverIndex ? 'active' : ''}`}
-                      onMouseDown={(e) => { e.preventDefault(); selectDriver(driver); }}
-                      onMouseEnter={() => setSelectedDriverIndex(index)}
-                    >
-                      <span className="driver-suggestion-name">{driver.name}</span>
-                      <span className="driver-suggestion-phone">{driver.phone}</span>
-                    </div>
-                  ))}
+          <div className="admin-booking-field">
+            <label>Driver Option</label>
+            <div className="driver-toggle-section">
+              <label className="driver-toggle-label">
+                <span>With Driver</span>
+                <div className="driver-toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={withDriver}
+                    onChange={() => setWithDriver(!withDriver)}
+                  />
+                  <span className="driver-toggle-slider"></span>
                 </div>
-              )}
+              </label>
+              <div className="driver-price-info">
+                {withDriver ? (
+                  <span className="driver-price-text">
+                    +{Number(selectedCar?.driver_price_per_day || 0).toLocaleString()} EGP/day
+                  </span>
+                ) : (
+                  <span className="driver-price-text">Car only</span>
+                )}
+              </div>
             </div>
-            <small className="admin-booking-hint">Type to search existing drivers. New drivers will be saved automatically.</small>
           </div>
 
-          <div className="admin-booking-field">
-            <label htmlFor="driver-phone">Driver Phone</label>
-            <input id="driver-phone" type="text" placeholder="Enter driver phone number" value={driverPhone} onChange={(e) => { setDriverPhone(e.target.value); setMessage(''); }} />
-          </div>
+          {withDriver && (
+            <>
+              <div className="admin-booking-field driver-field">
+                <label htmlFor="driver-name">Driver Name</label>
+                <div className="driver-input-wrapper">
+                  <input
+                    id="driver-name"
+                    ref={driverInputRef}
+                    type="text"
+                    placeholder="Start typing driver name..."
+                    value={driverName}
+                    onChange={(e) => { setDriverName(e.target.value); setMessage(''); }}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => {
+                      if (driverName.trim().length > 0) {
+                        const filtered = drivers.filter((d) => d.name.toLowerCase().includes(driverName.toLowerCase()));
+                        if (filtered.length > 0) { setFilteredDrivers(filtered); setShowDriverSuggestions(true); }
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => setShowDriverSuggestions(false), 200)}
+                    autoComplete="off"
+                  />
+                  {showDriverSuggestions && filteredDrivers.length > 0 && (
+                    <div className="driver-suggestions">
+                      {filteredDrivers.map((driver, index) => (
+                        <div
+                          key={driver.id}
+                          ref={(el) => (suggestionRefs.current[index] = el)}
+                          className={`driver-suggestion-item ${index === selectedDriverIndex ? 'active' : ''}`}
+                          onMouseDown={(e) => { e.preventDefault(); selectDriver(driver); }}
+                          onMouseEnter={() => setSelectedDriverIndex(index)}
+                        >
+                          <span className="driver-suggestion-name">{driver.name}</span>
+                          <span className="driver-suggestion-phone">{driver.phone}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <small className="admin-booking-hint">Type to search existing drivers. New drivers will be saved automatically.</small>
+              </div>
+
+              <div className="admin-booking-field">
+                <label htmlFor="driver-phone">Driver Phone</label>
+                <input id="driver-phone" type="text" placeholder="Enter driver phone number" value={driverPhone} onChange={(e) => { setDriverPhone(e.target.value); setMessage(''); }} />
+              </div>
+            </>
+          )}
 
           <div className="admin-booking-field">
             <label htmlFor="customer-extra-phone">Customer Extra Phone</label>
@@ -362,19 +397,21 @@ function AdminAddBooking() {
             <strong>{selectedCar ? `${selectedCar.brand} ${selectedCar.model}` : 'Not selected'}</strong>
           </div>
           <div className="admin-booking-summary-row">
-            <span>Price Per Day</span>
-            <strong>
-              {totalPerDay > 0 ? totalPerDay.toLocaleString() : '—'} EGP
-              <small style={{ fontSize: '10px', color: '#888', display: 'block' }}>(Car + Driver)</small>
-            </strong>
-          </div>
-          <div className="admin-booking-summary-row">
             <span>Driver</span>
-            <strong>{driverName || 'Not assigned'}</strong>
+            <strong>{withDriver ? (driverName || 'Not assigned') : 'No driver'}</strong>
           </div>
           <div className="admin-booking-summary-row">
             <span>Driver Phone</span>
-            <strong>{driverPhone || 'N/A'}</strong>
+            <strong>{withDriver ? (driverPhone || 'N/A') : 'N/A'}</strong>
+          </div>
+          <div className="admin-booking-summary-row">
+            <span>Price Per Day</span>
+            <strong>
+              {totalPerDay > 0 ? totalPerDay.toLocaleString() : '—'} EGP
+              <small style={{ fontSize: '10px', color: '#888', display: 'block' }}>
+                {withDriver ? '(Car + Driver)' : '(Car only)'}
+              </small>
+            </strong>
           </div>
           <div className="admin-booking-summary-row">
             <span>Pickup</span>

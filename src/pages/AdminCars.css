@@ -608,4 +608,24 @@
     font-size: 12px;
     padding: 7px 10px;
   }
+}/* Driver price styling */
+.driver-price {
+  color: #4CAF50;
+  font-weight: 500;
+}
+
+.driver-price strong {
+  color: var(--text-primary);
+}
+
+/* Dark mode support */
+[data-theme="dark"] .driver-price {
+  color: #66BB6A;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .driver-price {
+    font-size: 0.9rem;
+  }
 }

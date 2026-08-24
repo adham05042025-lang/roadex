@@ -38,6 +38,8 @@ function Admin() {
     completionRate: 0,
     depositCollected: 0,
     pendingBalance: 0,
+    withDriverCount: 0,
+    withoutDriverCount: 0,
   });
 
   const [bookings, setBookings] = useState([]);
@@ -113,7 +115,9 @@ function Admin() {
           total_price,
           deposit_paid,
           remaining_balance,
-          cars (brand, model)
+          with_driver,
+          driver_price_per_day,
+          cars (brand, model, price_per_day, driver_price_per_day)
         `)
         .order('created_at', { ascending: true }),
     ]);
@@ -130,25 +134,23 @@ function Admin() {
         new Date(b.return_at) < now
     ).length;
 
-    // 🔥 Revenue: من completed بس
     const revenue = bookingRows
       .filter((b) => b.status === 'completed')
       .reduce((sum, b) => sum + Number(b.total_price || 0), 0);
-    console.log('💰 Revenue (completed only):', revenue);
 
-    // 🔥 Deposit Collected: من confirmed و completed
     const depositCollected = bookingRows
       .filter((b) => b.status === 'confirmed' || b.status === 'completed')
       .reduce((sum, b) => sum + Number(b.deposit_paid || 0), 0);
-    console.log('💳 Deposit Collected:', depositCollected);
 
-    // 🔥 Pending Balance: من confirmed بس
     const pendingBalance = bookingRows
       .filter((b) => b.status === 'confirmed')
       .reduce((sum, b) => sum + Number(b.remaining_balance || 0), 0);
-    console.log('⏳ Pending Balance:', pendingBalance);
 
     const completed = bookingRows.filter((b) => b.status === 'completed').length;
+
+    // 🔥 Count bookings with/without driver using with_driver column
+    const withDriver = bookingRows.filter((b) => b.with_driver === true).length;
+    const withoutDriver = bookingRows.filter((b) => b.with_driver === false || b.with_driver === null).length;
 
     const newStats = {
       users: usersResult.count || 0,
@@ -160,6 +162,8 @@ function Admin() {
       completionRate: bookingRows.length > 0 ? Math.round((completed / bookingRows.length) * 100) : 0,
       depositCollected: depositCollected || 0,
       pendingBalance: pendingBalance || 0,
+      withDriverCount: withDriver,
+      withoutDriverCount: withoutDriver,
     };
 
     console.log('📊 New Stats Object:', newStats);
@@ -168,7 +172,6 @@ function Admin() {
     setStats(newStats);
   };
 
-  // Revenue Data
   const revenueData = useMemo(() => {
     const grouped = {};
     const now = new Date();
@@ -195,7 +198,6 @@ function Admin() {
     return result;
   }, [bookings, timeframe]);
 
-  // Status Distribution
   const statusData = useMemo(() => {
     const counts = { pending: 0, confirmed: 0, completed: 0, cancelled: 0 };
     bookings.forEach((b) => {
@@ -206,7 +208,16 @@ function Admin() {
       .map(([status, count]) => ({ status, count }));
   }, [bookings]);
 
-  // Most Booked Cars
+  const driverStatusData = useMemo(() => {
+    const withDriver = bookings.filter((b) => b.with_driver === true).length;
+    const withoutDriver = bookings.filter((b) => b.with_driver === false || b.with_driver === null).length;
+
+    return [
+      { name: 'With Driver', value: withDriver },
+      { name: 'Without Driver', value: withoutDriver },
+    ].filter(item => item.value > 0);
+  }, [bookings]);
+
   const topCars = useMemo(() => {
     const grouped = {};
     bookings.forEach((b) => {
@@ -219,7 +230,6 @@ function Admin() {
       .slice(0, 6);
   }, [bookings]);
 
-  // Booking Trends
   const trendData = useMemo(() => {
     const grouped = {};
     const now = new Date();
@@ -250,6 +260,11 @@ function Admin() {
     confirmed: '#00E676',
     completed: '#42A5F5',
     cancelled: '#EF5350',
+  };
+
+  const driverColors = {
+    'With Driver': '#4CAF50',
+    'Without Driver': '#FF9800',
   };
 
   const timeframes = [
@@ -357,6 +372,31 @@ function Admin() {
         </div>
       </div>
 
+      {/* DRIVER STATUS KPIs */}
+      <div className="admin-kpi-grid driver-stats">
+        <div className="kpi-card driver-with">
+          <div className="kpi-icon" style={{ background: 'rgba(76,175,80,0.15)' }}>🚗</div>
+          <div className="kpi-content">
+            <span className="kpi-label">With Driver</span>
+            <strong className="kpi-value" style={{ color: '#4CAF50' }}>
+              {stats.withDriverCount}
+            </strong>
+            <span className="kpi-trend">Bookings with driver</span>
+          </div>
+        </div>
+
+        <div className="kpi-card driver-without">
+          <div className="kpi-icon" style={{ background: 'rgba(255,152,0,0.15)' }}>🚗</div>
+          <div className="kpi-content">
+            <span className="kpi-label">Without Driver</span>
+            <strong className="kpi-value" style={{ color: '#FF9800' }}>
+              {stats.withoutDriverCount}
+            </strong>
+            <span className="kpi-trend">Bookings without driver</span>
+          </div>
+        </div>
+      </div>
+
       {/* CHARTS GRID */}
       <div className="admin-charts-grid">
 
@@ -447,7 +487,49 @@ function Admin() {
           </ResponsiveContainer>
         </div>
 
-        {/* 3. Most Booked Cars */}
+        {/* 3. Driver Status Distribution */}
+        {driverStatusData.length > 0 && (
+          <div className="chart-card">
+            <div className="chart-header">
+              <h2>🚗 Driver Status</h2>
+              <span>Distribution</span>
+            </div>
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={driverStatusData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%" cy="45%"
+                  innerRadius={55} outerRadius={90}
+                  paddingAngle={3}
+                  label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
+                >
+                  {driverStatusData.map((entry) => (
+                    <Cell
+                      key={entry.name}
+                      fill={driverColors[entry.name] || '#888'}
+                      stroke="rgba(0,0,0,0.1)"
+                      strokeWidth={2}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    background: 'rgba(20,20,20,0.92)',
+                    border: '1px solid rgba(212,175,55,0.3)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                  }}
+                />
+                <Legend verticalAlign="bottom" height={40} iconType="circle" />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* 4. Most Booked Cars */}
         <div className="chart-card">
           <div className="chart-header">
             <h2>🚗 Most Booked Cars</h2>
@@ -475,7 +557,7 @@ function Admin() {
           </ResponsiveContainer>
         </div>
 
-        {/* 4. Booking Trends */}
+        {/* 5. Booking Trends */}
         <div className="chart-card">
           <div className="chart-header">
             <h2>📉 Booking Trends</h2>
@@ -550,6 +632,16 @@ function Admin() {
           <p>Create a new car reservation for an existing customer.</p>
           <button onClick={() => navigate('/admin/add-booking')}>Add Booking</button>
         </div>
+
+        {/* Contracts Management Card - Super Admin Only */}
+        {role === 'super_admin' && (
+          <div className="admin-management-card">
+            <div className="management-icon">📄</div>
+            <h2>Contracts</h2>
+            <p>Manage rental contracts for cars with and without driver.</p>
+            <button onClick={() => navigate('/admin/contracts')}>Manage Contracts</button>
+          </div>
+        )}
       </div>
 
       {/* RECENT BOOKINGS */}
@@ -568,22 +660,28 @@ function Admin() {
           <div className="recent-empty">No bookings yet.</div>
         ) : (
           <div className="recent-bookings-list">
-            {recentBookings.map((b) => (
-              <div className="recent-booking-row" key={b.id}>
-                <div>
-                  <strong>
-                    {b.cars ? `${b.cars.brand} ${b.cars.model}` : 'Unknown Car'}
-                  </strong>
-                  <span>
-                    {new Date(b.created_at).toLocaleString('en-GB', {
-                      hour12: false,
-                    })}
-                  </span>
+            {recentBookings.map((b) => {
+              const hasDriver = b.with_driver === true;
+              return (
+                <div className="recent-booking-row" key={b.id}>
+                  <div>
+                    <strong>
+                      {b.cars ? `${b.cars.brand} ${b.cars.model}` : 'Unknown Car'}
+                    </strong>
+                    <span>
+                      {new Date(b.created_at).toLocaleString('en-GB', {
+                        hour12: false,
+                      })}
+                    </span>
+                    <span className={`driver-badge-small ${hasDriver ? 'with' : 'without'}`}>
+                      {hasDriver ? '🚗 With Driver' : '🚗 No Driver'}
+                    </span>
+                  </div>
+                  <span className={`dashboard-status ${b.status}`}>{b.status}</span>
+                  <strong>{Number(b.total_price).toLocaleString()} EGP</strong>
                 </div>
-                <span className={`dashboard-status ${b.status}`}>{b.status}</span>
-                <strong>{Number(b.total_price).toLocaleString()} EGP</strong>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

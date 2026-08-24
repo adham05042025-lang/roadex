@@ -16,6 +16,7 @@ function CarDetails() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [imageOpen, setImageOpen] = useState(false);
+  const [withDriver, setWithDriver] = useState(false);
 
   useEffect(() => {
     loadCar();
@@ -82,8 +83,16 @@ function CarDetails() {
       setMessage('This car is not available for the selected time.');
       return;
     }
+    
+    console.log('🚗 Going to booking with:', { withDriver }); // تأكد من withDriver
+    
     navigate('/booking', {
-      state: { car, pickupAt, returnAt },
+      state: { 
+        car, 
+        pickupAt, 
+        returnAt, 
+        withDriver  // تمرير withDriver
+      },
     });
   };
 
@@ -103,7 +112,9 @@ function CarDetails() {
     );
   }
 
-  const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+  const pricePerDay = withDriver 
+    ? Number(car.price_per_day) + Number(car.driver_price_per_day || 0)
+    : Number(car.price_per_day);
 
   return (
     <div className="car-details-page">
@@ -130,13 +141,46 @@ function CarDetails() {
             {car.car_type && <span>Type: {car.car_type}</span>}
           </div>
 
+          {/* Driver Toggle Section */}
+          <div className="driver-toggle-section">
+            <label className="driver-toggle-label">
+              <span>With Driver</span>
+              <div className="driver-toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={withDriver}
+                  onChange={() => setWithDriver(!withDriver)}
+                />
+                <span className="driver-toggle-slider"></span>
+              </div>
+            </label>
+            <div className="driver-price-info">
+              {withDriver ? (
+                <span className="driver-price-text">
+                  +{Number(car.driver_price_per_day || 0).toLocaleString()} EGP/day for driver
+                </span>
+              ) : (
+                <span className="driver-price-text">Without driver</span>
+              )}
+            </div>
+          </div>
+
           <div className="car-details-prices">
             <div className="car-details-price-box">
               <span>Price Per Day</span>
               <strong>
-                {totalPerDay.toLocaleString()} EGP
+                {pricePerDay.toLocaleString()} EGP
                 <small>/day</small>
-                <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>(Car + Driver)</small>
+                {withDriver && (
+                  <small style={{ color: '#4CAF50', fontSize: '10px', display: 'block' }}>
+                    (Car + Driver)
+                  </small>
+                )}
+                {!withDriver && (
+                  <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>
+                    (Car only)
+                  </small>
+                )}
               </strong>
             </div>
           </div>
@@ -174,7 +218,9 @@ function CarDetails() {
               </div>
             )}
             {message && <p className="car-details-message">{message}</p>}
-            <button type="button" className="book-now-button" onClick={goToBooking}>Book This Car</button>
+            <button type="button" className="book-now-button" onClick={goToBooking}>
+              Book This Car
+            </button>
           </div>
         </div>
       </div>

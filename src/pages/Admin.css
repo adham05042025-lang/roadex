@@ -522,4 +522,80 @@
   background: rgba(255, 68, 68, 0.12);
   color: #ff6b6b;
   border: 1px solid rgba(255, 68, 68, 0.2);
+}/* Driver Stats Cards */
+.admin-kpi-grid.driver-stats {
+  grid-template-columns: 1fr 1fr;
+  max-width: 600px;
+  margin: 0 auto 20px auto;
+}
+
+.kpi-card.driver-with {
+  border-left: 4px solid #4CAF50;
+}
+
+.kpi-card.driver-without {
+  border-left: 4px solid #FF9800;
+}
+
+/* Driver Badge in Recent Bookings */
+.driver-badge-small {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-left: 10px;
+}
+
+.driver-badge-small.with {
+  background: #4CAF5020;
+  color: #4CAF50;
+  border: 1px solid #4CAF50;
+}
+
+.driver-badge-small.without {
+  background: #FF980020;
+  color: #FF9800;
+  border: 1px solid #FF9800;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .driver-badge-small.with {
+  background: #4CAF5030;
+  color: #66BB6A;
+}
+
+[data-theme="dark"] .driver-badge-small.without {
+  background: #FF980030;
+  color: #FFB74D;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-kpi-grid.driver-stats {
+    grid-template-columns: 1fr 1fr;
+    max-width: 100%;
+  }
+
+  .driver-badge-small {
+    font-size: 9px;
+    padding: 1px 8px;
+    margin-left: 5px;
+  }
+
+  .recent-booking-row > div {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-kpi-grid.driver-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .driver-badge-small {
+    display: block;
+    margin: 4px 0 0 0;
+    text-align: center;
+  }
 }
