@@ -221,9 +221,103 @@ function SEOKeywords() {
           </div>
         </div>
 
-        {/* =========================
-            FAQ SECTION
-        ========================= */}
+        <div className="seo-keywords-box">
+          <h3>الكلمات المفتاحية – Keywords</h3>
+          <div className="keywords-tags">
+            <span>تأجير سيارات مصر</span>
+            <span>سيارة مع سائق</span>
+            <span>إيجار سيارات القاهرة</span>
+            <span>إيجار سيارات الإسكندرية</span>
+            <span>إيجار سيارات الغردقة</span>
+            <span>إيجار سيارات شرم الشيخ</span>
+            <span>إيجار سيارات الأقصر</span>
+            <span>إيجار سيارات أسوان</span>
+            <span>إيجار سيارات بورسعيد</span>
+            <span>إيجار سيارات السويس</span>
+            <span>إيجار سيارات المنصورة</span>
+            <span>إيجار سيارات طنطا</span>
+            <span>إيجار سيارات الزقازيق</span>
+            <span>إيجار سيارات الإسماعيلية</span>
+            <span>إيجار سيارات دمياط</span>
+            <span>إيجار سيارات المنيا</span>
+            <span>إيجار سيارات بني سويف</span>
+            <span>إيجار سيارات الفيوم</span>
+            <span>إيجار سيارات أسيوط</span>
+            <span>إيجار سيارات سوهاج</span>
+            <span>إيجار سيارات قنا</span>
+            <span>إيجار سيارات مرسى مطروح</span>
+            <span>إيجار سيارات دهب</span>
+            <span>إيجار سيارات نويبع</span>
+            <span>إيجار سيارات طابا</span>
+            <span>إيجار سيارات الجونة</span>
+            <span>إيجار سيارات سفاجا</span>
+            <span>إيجار سيارات القصير</span>
+            <span>إيجار سيارات سانت كاترين</span>
+            <span>Roadex</span>
+            <span>chauffeur service Egypt</span>
+            <span>car rental Egypt</span>
+            <span>luxury car rental</span>
+            <span>affordable car rental</span>
+            <span>سيارة للإيجار</span>
+            <span>تأجير سيارات مطار القاهرة</span>
+            <span>تأجير سيارات مطار الغردقة</span>
+            <span>تأجير سيارات مطار شرم الشيخ</span>
+            <span>تأجير سيارات مطار الأقصر</span>
+            <span>تأجير سيارات مطار أسوان</span>
+            <span>أفضل شركة تأجير سيارات</span>
+            <span>car rental with driver</span>
+            <span>car rental without driver</span>
+            <span>Egypt car hire</span>
+            <span>Cairo car rental</span>
+            <span>سيارات للايجار بالاسكندرية</span>
+            <span>سيارات للايجار بالغردقة</span>
+            <span>سيارات للايجار بشرم الشيخ</span>
+            <span>تأجير سيارات شهرية</span>
+            <span>تأجير سيارات بالسائق</span>
+            <span>سيارة مع سواق</span>
+            <span>أحسن عربية للإيجار</span>
+            <span>سعر إيجار السيارة في مصر</span>
+            <span>Best car rental Egypt</span>
+            <span>Car rental Cairo</span>
+            <span>Roadex car rental</span>
+            <span>Chauffeur driven car</span>
+            <span>Rent a car Egypt</span>
+            <span>جولة سياحية في مصر</span>
+            <span>رحلات سياحية في القاهرة</span>
+            <span>سياحة الأقصر</span>
+            <span>سياحة أسوان</span>
+            <span>الغردقة جولات</span>
+            <span>شرم الشيخ جولات</span>
+            <span>الساحل الشمالي</span>
+            <span>العين السخنة</span>
+            <span>مرسى مطروح</span>
+            <span>دهب</span>
+            <span>نويبع</span>
+            <span>طابا</span>
+            <span>الجونة</span>
+            <span>سفاجا</span>
+            <span>القصير</span>
+            <span>رأس غارب</span>
+            <span>الزعفرانة</span>
+            <span>الطور</span>
+            <span>سانت كاترين</span>
+            <span>سيناء</span>
+            <span>البحر الأحمر</span>
+            <span>الصعيد</span>
+            <span>الدلتا</span>
+            <span>شروط تأجير السيارات</span>
+            <span>أسعار تأجير السيارات</span>
+            <span>إلغاء حجز سيارة</span>
+            <span>تأمين السيارة</span>
+            <span>توصيل سيارة للمطار</span>
+            <span>car rental requirements</span>
+            <span>car rental prices Egypt</span>
+            <span>car rental cancellation policy</span>
+            <span>car insurance Egypt</span>
+            <span>airport car delivery</span>
+          </div>
+        </div>
+
         <div className="seo-faq-box">
           <h2>الأسئلة الشائعة – Frequently Asked Questions</h2>
           
@@ -323,103 +417,6 @@ function SEOKeywords() {
             <h4>Can I rent a car for business purposes?</h4>
             <p>نعم، نوفر سيارات مناسبة للأغراض التجارية والشركات، مع عروض خاصة للشركات والعملاء الدائمين.</p>
             <p>Yes, we provide cars suitable for business purposes and companies, with special offers for corporate clients.</p>
-          </div>
-        </div>
-
-        <div className="seo-keywords-box">
-          <h3>الكلمات المفتاحية – Keywords</h3>
-          <div className="keywords-tags">
-            <span>تأجير سيارات مصر</span>
-            <span>سيارة مع سائق</span>
-            <span>إيجار سيارات القاهرة</span>
-            <span>إيجار سيارات الإسكندرية</span>
-            <span>إيجار سيارات الغردقة</span>
-            <span>إيجار سيارات شرم الشيخ</span>
-            <span>إيجار سيارات الأقصر</span>
-            <span>إيجار سيارات أسوان</span>
-            <span>إيجار سيارات بورسعيد</span>
-            <span>إيجار سيارات السويس</span>
-            <span>إيجار سيارات المنصورة</span>
-            <span>إيجار سيارات طنطا</span>
-            <span>إيجار سيارات الزقازيق</span>
-            <span>إيجار سيارات الإسماعيلية</span>
-            <span>إيجار سيارات دمياط</span>
-            <span>إيجار سيارات المنيا</span>
-            <span>إيجار سيارات بني سويف</span>
-            <span>إيجار سيارات الفيوم</span>
-            <span>إيجار سيارات أسيوط</span>
-            <span>إيجار سيارات سوهاج</span>
-            <span>إيجار سيارات قنا</span>
-            <span>إيجار سيارات مرسى مطروح</span>
-            <span>إيجار سيارات دهب</span>
-            <span>إيجار سيارات نويبع</span>
-            <span>إيجار سيارات طابا</span>
-            <span>إيجار سيارات الجونة</span>
-            <span>إيجار سيارات سفاجا</span>
-            <span>إيجار سيارات القصير</span>
-            <span>إيجار سيارات سانت كاترين</span>
-            <span>Roadex</span>
-            <span>chauffeur service Egypt</span>
-            <span>car rental Egypt</span>
-            <span>luxury car rental</span>
-            <span>affordable car rental</span>
-            <span>سيارة للإيجار</span>
-            <span>تأجير سيارات مطار القاهرة</span>
-            <span>تأجير سيارات مطار الغردقة</span>
-            <span>تأجير سيارات مطار شرم الشيخ</span>
-            <span>تأجير سيارات مطار الأقصر</span>
-            <span>تأجير سيارات مطار أسوان</span>
-            <span>أفضل شركة تأجير سيارات</span>
-            <span>car rental with driver</span>
-            <span>car rental without driver</span>
-            <span>Egypt car hire</span>
-            <span>Cairo car rental</span>
-            <span>سيارات للايجار بالاسكندرية</span>
-            <span>سيارات للايجار بالغردقة</span>
-            <span>سيارات للايجار بشرم الشيخ</span>
-            <span>تأجير سيارات شهرية</span>
-            <span>تأجير سيارات بالسائق</span>
-            <span>سيارة مع سواق</span>
-            <span>أحسن عربية للإيجار</span>
-            <span>سعر إيجار السيارة في مصر</span>
-            <span>Best car rental Egypt</span>
-            <span>Car rental Cairo</span>
-            <span>Roadex car rental</span>
-            <span>Chauffeur driven car</span>
-            <span>Rent a car Egypt</span>
-            <span>جولة سياحية في مصر</span>
-            <span>رحلات سياحية في القاهرة</span>
-            <span>سياحة الأقصر</span>
-            <span>سياحة أسوان</span>
-            <span>الغردقة جولات</span>
-            <span>شرم الشيخ جولات</span>
-            <span>الساحل الشمالي</span>
-            <span>العين السخنة</span>
-            <span>مرسى مطروح</span>
-            <span>دهب</span>
-            <span>نويبع</span>
-            <span>طابا</span>
-            <span>الجونة</span>
-            <span>سفاجا</span>
-            <span>القصير</span>
-            <span>رأس غارب</span>
-            <span>الزعفرانة</span>
-            <span>الطور</span>
-            <span>سانت كاترين</span>
-            <span>سيناء</span>
-            <span>البحر الأحمر</span>
-            <span>الصعيد</span>
-            <span>الدلتا</span>
-            <span>شروط تأجير السيارات</span>
-            <span>أسعار تأجير السيارات</span>
-            <span>إلغاء حجز سيارة</span>
-            <span>تأمين السيارة</span>
-            <span>توصيل سيارة للمطار</span>
-            <span>car rental requirements</span>
-            <span>car rental prices Egypt</span>
-            <span>car rental cancellation policy</span>
-            <span>car insurance Egypt</span>
-            <span>airport car delivery</span>
           </div>
         </div>
       </div>
