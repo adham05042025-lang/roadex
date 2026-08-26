@@ -26,6 +26,22 @@ function AdminAddBooking() {
   const [message, setMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [withDriver, setWithDriver] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState('0-1');
+  const [nationalId, setNationalId] = useState('');
+  const [insuranceAmount, setInsuranceAmount] = useState('');
+  const [pickupFee, setPickupFee] = useState('');
+  const [deliveryFee, setDeliveryFee] = useState('');
+
+  const packageKeys = ['0-1', '2-3', '4-6', '7-13', '14-20', '21-60', '61-356'];
+  const packageLabels = {
+    '0-1': '0-1 days',
+    '2-3': '2-3 days',
+    '4-6': '4-6 days',
+    '7-13': '7-13 days',
+    '14-20': '14-20 days',
+    '21-60': '21-60 days',
+    '61-356': '61-356 days',
+  };
 
   useEffect(() => {
     loadPageData();
@@ -82,7 +98,7 @@ function AdminAddBooking() {
     setMessage('');
     const [customersResult, carsResult, driversResult] = await Promise.all([
       supabase.from('profiles').select('id, full_name, phone, role').eq('role', 'user').order('full_name', { ascending: true }),
-      supabase.from('cars').select('id, brand, model, year, price_per_day, driver_price_per_day, quantity, image_url').gt('quantity', 0).order('brand', { ascending: true }),
+      supabase.from('cars').select('id, brand, model, year, price_per_day, driver_price_per_day, package_prices, quantity, image_url').gt('quantity', 0).order('brand', { ascending: true }),
       supabase.from('drivers').select('id, name, phone').order('name', { ascending: true }),
     ]);
     if (customersResult.error) {
@@ -134,22 +150,29 @@ function AdminAddBooking() {
     const difference = returnDate.getTime() - pickupDate.getTime();
     const hours = difference / (1000 * 60 * 60);
     if (difference <= 0) return 0;
-    if (hours <= 12) return 1;
-    return Math.ceil(hours / 12);
+    return Math.ceil(hours / 24);
   }, [pickupAt, returnAt]);
 
-  const totalPerDay = useMemo(() => {
+  const getDailyPrice = () => {
     if (!selectedCar) return 0;
-    if (withDriver) {
-      return Number(selectedCar.price_per_day) + Number(selectedCar.driver_price_per_day || 0);
-    }
-    return Number(selectedCar.price_per_day);
-  }, [selectedCar, withDriver]);
+    const type = withDriver ? 'with_driver' : 'without_driver';
+    const price = selectedCar.package_prices?.[selectedPackage]?.[type];
+    if (price && price > 0) return price;
+    return withDriver 
+      ? Number(selectedCar.price_per_day) + Number(selectedCar.driver_price_per_day || 0)
+      : Number(selectedCar.price_per_day);
+  };
 
   const estimatedPrice = useMemo(() => {
     if (!selectedCar || estimatedDays === 0) return 0;
-    return estimatedDays * totalPerDay;
-  }, [selectedCar, estimatedDays, totalPerDay]);
+    const dailyPrice = getDailyPrice();
+    const total = (estimatedDays * dailyPrice) + Number(insuranceAmount || 0) + Number(pickupFee || 0) + Number(deliveryFee || 0);
+    return total;
+  }, [selectedCar, estimatedDays, selectedPackage, withDriver, insuranceAmount, pickupFee, deliveryFee]);
+
+  const totalPerDay = useMemo(() => {
+    return getDailyPrice();
+  }, [selectedCar, selectedPackage, withDriver]);
 
   const minimumDateTime = useMemo(() => {
     const now = new Date();
@@ -185,7 +208,7 @@ function AdminAddBooking() {
       if (savedDriver) driverId = savedDriver.id;
     }
     const confirmed = window.confirm(
-      `Create this booking?\n\nCustomer: ${selectedCustomer?.full_name || 'Selected customer'}\nCar: ${selectedCar ? `${selectedCar.brand} ${selectedCar.model}` : 'Selected car'}\nDriver: ${withDriver ? (driverName || 'Not assigned') : 'No driver'}\nEstimated total: ${estimatedPrice.toLocaleString()} EGP`
+      `Create this booking?\n\nCustomer: ${selectedCustomer?.full_name || 'Selected customer'}\nCar: ${selectedCar ? `${selectedCar.brand} ${selectedCar.model}` : 'Selected car'}\nDriver: ${withDriver ? (driverName || 'Not assigned') : 'No driver'}\nPackage: ${packageLabels[selectedPackage]}\nInsurance: ${insuranceAmount || 0} EGP\nPickup Fee: ${pickupFee || 0} EGP\nDelivery Fee: ${deliveryFee || 0} EGP\nEstimated total: ${estimatedPrice.toLocaleString()} EGP`
     );
     if (!confirmed) return;
     setSubmitting(true);
@@ -197,6 +220,12 @@ function AdminAddBooking() {
       p_driver_name: withDriver ? (driverName.trim() || null) : null,
       p_driver_phone: withDriver ? (driverPhone.trim() || null) : null,
       p_customer_extra_phone: customerExtraPhone.trim() || null,
+      p_with_driver: withDriver,
+      p_package: selectedPackage,
+      p_national_id: nationalId.trim() || null,
+      p_insurance_amount: Number(insuranceAmount) || 0,
+      p_pickup_fee: Number(pickupFee) || 0,
+      p_delivery_fee: Number(deliveryFee) || 0,
     });
     if (error) {
       showMessage(error.message, true);
@@ -213,6 +242,11 @@ function AdminAddBooking() {
     setCustomerExtraPhone('');
     setShowDriverSuggestions(false);
     setWithDriver(false);
+    setSelectedPackage('0-1');
+    setNationalId('');
+    setInsuranceAmount('');
+    setPickupFee('');
+    setDeliveryFee('');
     setSubmitting(false);
   };
 
@@ -265,16 +299,30 @@ function AdminAddBooking() {
             <select id="booking-car" value={carId} onChange={(e) => { setCarId(e.target.value); setMessage(''); }} required>
               <option value="">Select a car</option>
               {cars.map((car) => {
-                const carOnly = Number(car.price_per_day);
-                const withDriverPrice = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+                const dailyPrice = car.package_prices?.['0-1']?.['without_driver'] || car.price_per_day;
                 return (
                   <option key={car.id} value={car.id}>
-                    {car.brand} {car.model} — {carOnly.toLocaleString()} EGP/day (Car) / {withDriverPrice.toLocaleString()} EGP/day (Car + Driver) — Qty: {car.quantity}
+                    {car.brand} {car.model} — {dailyPrice.toLocaleString()} EGP/day — Qty: {car.quantity}
                   </option>
                 );
               })}
             </select>
             {cars.length === 0 && <small className="admin-booking-warning">No cars with available stock were found.</small>}
+          </div>
+
+          <div className="admin-booking-field">
+            <label>Package</label>
+            <select 
+              value={selectedPackage} 
+              onChange={(e) => setSelectedPackage(e.target.value)}
+              className="admin-booking-select"
+            >
+              {packageKeys.map((key) => (
+                <option key={key} value={key}>
+                  {packageLabels[key]}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="admin-booking-field">
@@ -357,6 +405,26 @@ function AdminAddBooking() {
             <input id="customer-extra-phone" type="text" placeholder="Enter extra customer phone" value={customerExtraPhone} onChange={(e) => { setCustomerExtraPhone(e.target.value); setMessage(''); }} />
           </div>
 
+          <div className="admin-booking-field">
+            <label htmlFor="national-id">National ID</label>
+            <input id="national-id" type="text" placeholder="Enter national ID" value={nationalId} onChange={(e) => { setNationalId(e.target.value); setMessage(''); }} />
+          </div>
+
+          <div className="admin-booking-field">
+            <label htmlFor="insurance-amount">Insurance Amount (EGP)</label>
+            <input id="insurance-amount" type="number" placeholder="Enter insurance amount" min="0" step="0.01" value={insuranceAmount} onChange={(e) => { setInsuranceAmount(e.target.value); setMessage(''); }} />
+          </div>
+
+          <div className="admin-booking-field">
+            <label htmlFor="pickup-fee">Pickup Fee (EGP)</label>
+            <input id="pickup-fee" type="number" placeholder="Enter pickup fee" min="0" step="0.01" value={pickupFee} onChange={(e) => { setPickupFee(e.target.value); setMessage(''); }} />
+          </div>
+
+          <div className="admin-booking-field">
+            <label htmlFor="delivery-fee">Delivery Fee (EGP)</label>
+            <input id="delivery-fee" type="number" placeholder="Enter delivery fee" min="0" step="0.01" value={deliveryFee} onChange={(e) => { setDeliveryFee(e.target.value); setMessage(''); }} />
+          </div>
+
           <div className="admin-booking-date-grid">
             <div className="admin-booking-field">
               <label htmlFor="admin-pickup-at">Pickup Date and Time</label>
@@ -393,8 +461,34 @@ function AdminAddBooking() {
             <strong>{customerExtraPhone || 'Not added'}</strong>
           </div>
           <div className="admin-booking-summary-row">
+            <span>National ID</span>
+            <strong>{nationalId || 'Not added'}</strong>
+          </div>
+          <div className="admin-booking-summary-row">
             <span>Car</span>
             <strong>{selectedCar ? `${selectedCar.brand} ${selectedCar.model}` : 'Not selected'}</strong>
+          </div>
+          <div className="admin-booking-summary-row">
+            <span>Package</span>
+            <strong>{packageLabels[selectedPackage]}</strong>
+          </div>
+          <div className="admin-booking-summary-row">
+            <span>Price Per Day</span>
+            <strong>
+              {totalPerDay > 0 ? totalPerDay.toLocaleString() : '—'} EGP
+            </strong>
+          </div>
+          <div className="admin-booking-summary-row">
+            <span>Insurance</span>
+            <strong>{Number(insuranceAmount || 0).toLocaleString()} EGP</strong>
+          </div>
+          <div className="admin-booking-summary-row">
+            <span>Pickup Fee</span>
+            <strong>{Number(pickupFee || 0).toLocaleString()} EGP</strong>
+          </div>
+          <div className="admin-booking-summary-row">
+            <span>Delivery Fee</span>
+            <strong>{Number(deliveryFee || 0).toLocaleString()} EGP</strong>
           </div>
           <div className="admin-booking-summary-row">
             <span>Driver</span>
@@ -403,15 +497,6 @@ function AdminAddBooking() {
           <div className="admin-booking-summary-row">
             <span>Driver Phone</span>
             <strong>{withDriver ? (driverPhone || 'N/A') : 'N/A'}</strong>
-          </div>
-          <div className="admin-booking-summary-row">
-            <span>Price Per Day</span>
-            <strong>
-              {totalPerDay > 0 ? totalPerDay.toLocaleString() : '—'} EGP
-              <small style={{ fontSize: '10px', color: '#888', display: 'block' }}>
-                {withDriver ? '(Car + Driver)' : '(Car only)'}
-              </small>
-            </strong>
           </div>
           <div className="admin-booking-summary-row">
             <span>Pickup</span>
@@ -425,7 +510,7 @@ function AdminAddBooking() {
             <span>Rental Days</span>
             <strong>
               {estimatedDays || 0}
-              <small style={{ fontSize: '10px', color: '#888', display: 'block' }}>(12 hours = 1 day)</small>
+              <small style={{ fontSize: '10px', color: '#888', display: 'block' }}>(24 hours = 1 day)</small>
             </strong>
           </div>
           <div className="admin-booking-summary-row total">

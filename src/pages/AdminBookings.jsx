@@ -1,3 +1,4 @@
+// AdminBookings.jsx - النسخة الأصلية الكاملة
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabase';
 import { formatDate24 } from '../utils/formatDate';
@@ -29,6 +30,10 @@ function AdminBookings() {
     status: '',
     total_price: '',
     with_driver: false,
+    national_id: '',
+    insurance_amount: '',
+    pickup_fee: '',
+    delivery_fee: '',
   });
 
   const [showExtensionModal, setShowExtensionModal] = useState(false);
@@ -48,8 +53,7 @@ function AdminBookings() {
     const difference = returnDate - pickup;
     const hours = difference / (1000 * 60 * 60);
     if (difference <= 0) return 0;
-    if (hours <= 12) return 1;
-    return Math.ceil(hours / 12);
+    return Math.ceil(hours / 24);
   };
 
   const calculateExtraDays = (oldDate, newDate) => {
@@ -117,6 +121,11 @@ function AdminBookings() {
         extension_reason,
         with_driver,
         driver_price_per_day,
+        national_id,
+        insurance_amount,
+        pickup_fee,
+        delivery_fee,
+        package_used,
         cars (
           id,
           brand,
@@ -327,7 +336,6 @@ function AdminBookings() {
     setMessage('');
     setUpdatingId(booking.id);
     try {
-      // جلب العقد المناسب من جدول contracts
       const contractName = booking.with_driver ? 'With Driver Contract' : 'Without Driver Contract';
       
       const { data: contractData, error: contractError } = await supabase
@@ -338,7 +346,6 @@ function AdminBookings() {
         .single();
 
       if (contractError) {
-        // لو مفيش عقد matching، استخدم الـ contract_url القديم
         if (booking.contract_url) {
           const newWindow = window.open('', '_blank');
           if (newWindow) {
@@ -356,20 +363,24 @@ function AdminBookings() {
       }
 
       if (contractData && contractData.template_html) {
-        // استبدال المتغيرات في العقد
         let contractHtml = contractData.template_html
-          .replace(/\{\{booking_number\}\}/g, booking.booking_number || 'N/A')
+          .replace(/\{\{contract_number\}\}/g, booking.booking_number || 'N/A')
           .replace(/\{\{signature_date\}\}/g, new Date().toLocaleDateString('en-US'))
           .replace(/\{\{customer_name\}\}/g, booking.customer?.full_name || 'N/A')
           .replace(/\{\{customer_phone\}\}/g, booking.customer?.phone || 'N/A')
-          .replace(/\{\{car_name\}\}/g, `${booking.cars?.brand || 'N/A'} ${booking.cars?.model || 'N/A'}`)
+          .replace(/\{\{national_id\}\}/g, booking.national_id || 'N/A')
+          .replace(/\{\{car_model\}\}/g, `${booking.cars?.brand || 'N/A'} ${booking.cars?.model || 'N/A'}`)
           .replace(/\{\{plate_number\}\}/g, booking.plate_number || 'N/A')
-          .replace(/\{\{driver_name\}\}/g, booking.driver_name || 'N/A')
-          .replace(/\{\{driver_phone\}\}/g, booking.driver_phone || 'N/A')
-          .replace(/\{\{pickup_at\}\}/g, formatDate24(booking.pickup_at))
           .replace(/\{\{pickup_location\}\}/g, 'Cairo')
+          .replace(/\{\{pickup_at\}\}/g, formatDate24(booking.pickup_at))
+          .replace(/\{\{return_at\}\}/g, formatDate24(booking.return_at))
+          .replace(/\{\{rental_days\}\}/g, calculateRentalDays(booking.pickup_at, booking.return_at))
+          .replace(/\{\{with_driver\}\}/g, booking.with_driver ? 'With Driver' : 'Without Driver')
           .replace(/\{\{total_price\}\}/g, booking.total_price || 0)
-          .replace(/\{\{deposit_paid\}\}/g, booking.deposit_paid || 0)
+          .replace(/\{\{security_deposit\}\}/g, booking.deposit_paid || 0)
+          .replace(/\{\{insurance_amount\}\}/g, booking.insurance_amount || 0)
+          .replace(/\{\{pickup_fee\}\}/g, booking.pickup_fee || 0)
+          .replace(/\{\{delivery_fee\}\}/g, booking.delivery_fee || 0)
           .replace(/\{\{remaining_balance\}\}/g, booking.remaining_balance || 0);
 
         const newWindow = window.open('', '_blank');
@@ -401,13 +412,17 @@ function AdminBookings() {
       driver_phone: booking.driver_phone || '',
       customer_phone_extra: booking.customer_phone_extra || '',
       plate_number: booking.plate_number || '',
-      deposit_paid: booking.deposit_paid || '',
-      remaining_balance: booking.remaining_balance || '',
+      deposit_paid: booking.deposit_paid || 0,
+      remaining_balance: (Number(booking.total_price) - Number(booking.deposit_paid)) || 0,
       pickup_at: booking.pickup_at ? booking.pickup_at.slice(0, 16) : '',
       return_at: booking.return_at ? booking.return_at.slice(0, 16) : '',
       status: booking.status || 'pending',
       total_price: booking.total_price || '',
       with_driver: booking.with_driver || false,
+      national_id: booking.national_id || '',
+      insurance_amount: booking.insurance_amount || '',
+      pickup_fee: booking.pickup_fee || '',
+      delivery_fee: booking.delivery_fee || '',
     });
     setShowEditModal(true);
   };
@@ -428,6 +443,10 @@ function AdminBookings() {
       status: '',
       total_price: '',
       with_driver: false,
+      national_id: '',
+      insurance_amount: '',
+      pickup_fee: '',
+      delivery_fee: '',
     });
   };
 
@@ -465,6 +484,10 @@ function AdminBookings() {
         status: editForm.status,
         total_price: total,
         with_driver: editForm.with_driver,
+        national_id: editForm.national_id.trim() || null,
+        insurance_amount: Number(editForm.insurance_amount) || 0,
+        pickup_fee: Number(editForm.pickup_fee) || 0,
+        delivery_fee: Number(editForm.delivery_fee) || 0,
       })
       .eq('id', editingBooking.id);
     if (error) {
@@ -509,7 +532,7 @@ function AdminBookings() {
 
   const getTotalPerDay = (car) => {
     if (!car) return 0;
-    return Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+    return Number(car.price_per_day) || 0;
   };
 
   const statusCounts = useMemo(() => {
@@ -782,6 +805,10 @@ function AdminBookings() {
                       <span>Extra Phone</span>
                       <strong>{booking.customer_phone_extra || 'N/A'}</strong>
                     </div>
+                    <div className="booking-detail-box">
+                      <span>National ID</span>
+                      <strong>{booking.national_id || 'N/A'}</strong>
+                    </div>
                   </div>
                 </div>
 
@@ -836,7 +863,7 @@ function AdminBookings() {
                       <span>Rental Days</span>
                       <strong>
                         {calculateRentalDays(booking.pickup_at, booking.return_at)} days
-                        <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>(12h = 1 day)</small>
+                        <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>(24h = 1 day)</small>
                       </strong>
                     </div>
                     <div className="booking-detail-box">
@@ -844,7 +871,7 @@ function AdminBookings() {
                       <strong>
                         {getTotalPerDay(booking.cars).toLocaleString()} EGP
                         <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>
-                          Car: {Number(booking.cars?.price_per_day || 0).toLocaleString()} + Driver: {Number(booking.cars?.driver_price_per_day || 0).toLocaleString()} EGP
+                          {booking.with_driver ? 'Car + Driver' : 'Car only'}
                         </small>
                       </strong>
                     </div>
@@ -856,6 +883,18 @@ function AdminBookings() {
                       <span>Deposit</span>
                       <strong>{Number(booking.deposit_paid || 0).toLocaleString()} EGP</strong>
                     </div>
+                    <div className="booking-detail-box">
+                      <span>Insurance</span>
+                      <strong>{Number(booking.insurance_amount || 0).toLocaleString()} EGP</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Pickup Fee</span>
+                      <strong>{Number(booking.pickup_fee || 0).toLocaleString()} EGP</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Delivery Fee</span>
+                      <strong>{Number(booking.delivery_fee || 0).toLocaleString()} EGP</strong>
+                    </div>
                     <div className="booking-detail-box total-price">
                       <span>Remaining</span>
                       <strong>{Number(booking.remaining_balance || 0).toLocaleString()} EGP</strong>
@@ -863,6 +902,10 @@ function AdminBookings() {
                     <div className="booking-detail-box total-price">
                       <span>Total</span>
                       <strong>{Number(booking.total_price || 0).toLocaleString()} EGP</strong>
+                    </div>
+                    <div className="booking-detail-box">
+                      <span>Package</span>
+                      <strong>{booking.package_used || 'N/A'}</strong>
                     </div>
                   </div>
                 </div>
@@ -1031,15 +1074,36 @@ function AdminBookings() {
               </div>
               <div className="modal-field">
                 <label>Deposit Paid (EGP)</label>
-                <input type="number" placeholder="Enter deposit amount" value={editForm.deposit_paid} onChange={(e) => {
+                <input type="number" placeholder="Enter deposit amount" min="0" value={editForm.deposit_paid} onChange={(e) => {
                   const val = e.target.value;
-                  setEditForm({ ...editForm, deposit_paid: val, remaining_balance: (Number(editForm.total_price) || 0) - (Number(val) || 0) });
+                  const total = Number(editForm.total_price) || 0;
+                  setEditForm({ 
+                    ...editForm, 
+                    deposit_paid: val, 
+                    remaining_balance: total - (Number(val) || 0)
+                  });
                 }} />
-                <small style={{ color: '#888', fontSize: '11px' }}>Remaining will be calculated automatically</small>
+                <small style={{ color: '#888', fontSize: '11px' }}>Enter 0 for no deposit</small>
               </div>
               <div className="modal-field">
                 <label>Remaining Balance (EGP)</label>
                 <input type="text" value={calculateRemaining().toLocaleString()} disabled style={{ opacity: 0.7, cursor: 'not-allowed', background: '#0d0d0d' }} />
+              </div>
+              <div className="modal-field">
+                <label>National ID</label>
+                <input type="text" placeholder="Enter national ID" value={editForm.national_id} onChange={(e) => setEditForm({ ...editForm, national_id: e.target.value })} />
+              </div>
+              <div className="modal-field">
+                <label>Insurance Amount (EGP)</label>
+                <input type="number" placeholder="Enter insurance amount" value={editForm.insurance_amount} onChange={(e) => setEditForm({ ...editForm, insurance_amount: e.target.value })} />
+              </div>
+              <div className="modal-field">
+                <label>Pickup Fee (EGP)</label>
+                <input type="number" placeholder="Enter pickup fee" value={editForm.pickup_fee} onChange={(e) => setEditForm({ ...editForm, pickup_fee: e.target.value })} />
+              </div>
+              <div className="modal-field">
+                <label>Delivery Fee (EGP)</label>
+                <input type="number" placeholder="Enter delivery fee" value={editForm.delivery_fee} onChange={(e) => setEditForm({ ...editForm, delivery_fee: e.target.value })} />
               </div>
               <div className="modal-field">
                 <label>Pickup Date & Time</label>
@@ -1069,7 +1133,12 @@ function AdminBookings() {
                 <label>Total Price (EGP)</label>
                 <input type="number" placeholder="Enter total price" value={editForm.total_price} onChange={(e) => {
                   const val = e.target.value;
-                  setEditForm({ ...editForm, total_price: val, remaining_balance: (Number(val) || 0) - (Number(editForm.deposit_paid) || 0) });
+                  const deposit = Number(editForm.deposit_paid) || 0;
+                  setEditForm({ 
+                    ...editForm, 
+                    total_price: val, 
+                    remaining_balance: (Number(val) || 0) - deposit
+                  });
                 }} />
                 <small style={{ color: '#888', fontSize: '11px' }}>Price will be auto-calculated based on 12h/day</small>
               </div>
