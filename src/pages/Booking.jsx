@@ -1,3 +1,4 @@
+// Booking.jsx
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
@@ -7,13 +8,10 @@ import './Booking.css';
 function Booking() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { car, pickupAt, returnAt, withDriver } = location.state || {};
+  const { car, pickupAt, returnAt, withDriver, estimatedPrice, rentalDays, selectedPackage } = location.state || {};
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [estimatedPrice, setEstimatedPrice] = useState(0);
-  const [rentalDays, setRentalDays] = useState(1);
-  const [rentalHours, setRentalHours] = useState(0);
   const [contractTemplate, setContractTemplate] = useState('');
   const [bookingNumber, setBookingNumber] = useState(null);
   const [customerData, setCustomerData] = useState({
@@ -23,7 +21,6 @@ function Booking() {
 
   useEffect(() => {
     if (car && pickupAt && returnAt) {
-      calculateEstimatedPrice();
       loadContractFromDB();
       getUserData();
     }
@@ -43,26 +40,6 @@ function Booking() {
         phone: profile?.phone || 'N/A',
       });
     }
-  };
-
-  const calculateEstimatedPrice = () => {
-    const pickup = new Date(pickupAt);
-    const returnDate = new Date(returnAt);
-    const difference = returnDate - pickup;
-    const hours = difference / (1000 * 60 * 60);
-    let days;
-    if (hours <= 12) {
-      days = 1;
-    } else {
-      days = Math.ceil(hours / 12);
-    }
-    const totalPerDay = withDriver 
-      ? Number(car.price_per_day) + Number(car.driver_price_per_day || 0)
-      : Number(car.price_per_day);
-    const totalPrice = days * totalPerDay;
-    setRentalDays(days);
-    setRentalHours(Math.round(hours * 10) / 10);
-    setEstimatedPrice(totalPrice);
   };
 
   const loadContractFromDB = async () => {
@@ -93,8 +70,8 @@ function Booking() {
   const renderContract = (template, bookingNum) => {
     if (!template) return '';
 
-    const depositAmount = 0;
-    const balanceAmount = estimatedPrice;
+    const depositAmount = Math.round(estimatedPrice * 0.3);
+    const balanceAmount = Math.round(estimatedPrice * 0.7);
     const now = new Date();
     const signatureDate = now.toLocaleDateString('en-US');
 
@@ -200,9 +177,7 @@ function Booking() {
     );
   }
 
-  const totalPerDay = withDriver 
-    ? Number(car.price_per_day) + Number(car.driver_price_per_day || 0)
-    : Number(car.price_per_day);
+  const hoursPerDay = withDriver ? 12 : 24;
 
   return (
     <div className="booking-page">
@@ -227,12 +202,10 @@ function Booking() {
               </span>
             </div>
             <p className="booking-price">
-              {totalPerDay.toLocaleString()} EGP / day
+              {estimatedPrice.toLocaleString()} EGP
               <small style={{ fontSize: '11px', color: '#888', display: 'block' }}>
-                {withDriver 
-                  ? `Car + Driver — 12 hours = 1 day`
-                  : `Car only — 12 hours = 1 day`
-                }
+                {selectedPackage === 'monthly' ? 'Monthly Package' : 
+                 selectedPackage === 'weekly' ? 'Weekly Package' : 'Daily Rate'}
               </small>
             </p>
           </div>
@@ -257,35 +230,25 @@ function Booking() {
           </div>
 
           <div className="booking-summary-row">
-            <span>Total Duration</span>
-            <strong>{rentalHours} hours</strong>
-          </div>
-
-          <div className="booking-summary-row">
             <span>Rental Days</span>
             <strong>
               {rentalDays} {rentalDays === 1 ? 'Day' : 'Days'}
-              <small style={{ fontSize: '11px', color: '#888', display: 'block' }}>(12 hours = 1 day)</small>
-            </strong>
-          </div>
-
-          <div className="booking-summary-row">
-            <span>Price Per Day</span>
-            <strong>
-              {totalPerDay.toLocaleString()} EGP
               <small style={{ fontSize: '11px', color: '#888', display: 'block' }}>
-                {withDriver ? '(Car + Driver)' : '(Car only)'}
+                {hoursPerDay} hours = 1 day
               </small>
             </strong>
           </div>
 
           <div className="booking-summary-row">
-            <span>Total Rental</span>
-            <strong>{totalPerDay.toLocaleString()} EGP × {rentalDays}</strong>
+            <span>Package</span>
+            <strong>
+              {selectedPackage === 'monthly' ? 'Monthly (30 days)' : 
+               selectedPackage === 'weekly' ? 'Weekly (7 days)' : 'Daily'}
+            </strong>
           </div>
 
           <div className="booking-summary-row total">
-            <span>Estimated Total</span>
+            <span>Total Price</span>
             <strong>{estimatedPrice.toLocaleString()} EGP</strong>
           </div>
 
@@ -299,10 +262,6 @@ function Booking() {
 
           <p className="booking-note">
             The final price is calculated securely by the database when the booking is confirmed.
-            <br />
-            <small style={{ color: '#888' }}>
-              Note: 12 hours = 1 rental day.
-            </small>
           </p>
 
           {message && <p className="booking-message">{message}</p>}

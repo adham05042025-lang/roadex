@@ -7,6 +7,7 @@ import './Home.css';
 function Home() {
   const navigate = useNavigate();
   const [cars, setCars] = useState([]);
+  const [allCars, setAllCars] = useState([]); // ✅ كل العربيات للـ Booking Bar
 
   // State للـ Booking Bar
   const [selectedCarId, setSelectedCarId] = useState('');
@@ -15,6 +16,7 @@ function Home() {
 
   useEffect(() => {
     loadCars();
+    loadAllCars(); // ✅ جلب كل العربيات للـ Booking Bar
   }, []);
 
   const loadCars = async () => {
@@ -28,6 +30,30 @@ function Home() {
     }
   };
 
+  // ✅ جلب كل العربيات للـ Booking Bar
+  const loadAllCars = async () => {
+    const { data, error } = await supabase
+      .from('cars')
+      .select('*')
+      .order('brand', { ascending: true });
+
+    if (!error) {
+      setAllCars(data || []);
+    }
+  };
+
+  // ✅ جلب سعر اليوم من باقة 61-356 (بدون سائق)
+  const getDisplayPrice = (car) => {
+    if (!car) return 0;
+    
+    const price = car.package_prices?.['61-356']?.['without_driver'];
+    if (price && price > 0) {
+      return price;
+    }
+    
+    return Number(car.price_per_day) || 0;
+  };
+
   // وظيفة البحث عن سيارة
   const handleFindCar = (e) => {
     e.preventDefault();
@@ -37,9 +63,11 @@ function Home() {
       return;
     }
 
+    const selectedCar = allCars.find((c) => c.id === selectedCarId);
+    
     navigate('/booking', {
       state: {
-        car: cars.find((c) => c.id === selectedCarId),
+        car: selectedCar,
         pickupAt,
         returnAt,
       },
@@ -160,12 +188,12 @@ function Home() {
               >
                 <option value="">Select Vehicle</option>
 
-                {cars.map((car) => {
-                  // 🔥 سعر شامل (عربية + سواق)
-                  const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+                {allCars.map((car) => {
+                  // 🔥 سعر من باقة 61-356 (بدون سائق)
+                  const displayPrice = getDisplayPrice(car);
                   return (
                     <option key={car.id} value={car.id}>
-                      {car.brand} {car.model} — {totalPerDay.toLocaleString()} EGP/day (Car + Driver)
+                      {car.brand} {car.model} — {displayPrice.toLocaleString()} EGP/day
                     </option>
                   );
                 })}
@@ -417,8 +445,8 @@ function Home() {
         <div className="home-fleet-grid">
 
           {cars.map((car) => {
-            // 🔥 سعر شامل (عربية + سواق)
-            const totalPerDay = Number(car.price_per_day) + Number(car.driver_price_per_day || 0);
+            // 🔥 سعر من باقة 61-356 (بدون سائق)
+            const displayPrice = getDisplayPrice(car);
 
             return (
               <article
@@ -473,12 +501,9 @@ function Home() {
 
                     <div>
                       <strong>
-                        {totalPerDay.toLocaleString()} EGP
+                        {displayPrice.toLocaleString()} EGP
                       </strong>
                       <small>/ DAY</small>
-                      <small style={{ color: '#888', fontSize: '9px', display: 'block' }}>
-                        (Car + Driver)
-                      </small>
                     </div>
 
                     <Link

@@ -520,4 +520,61 @@
 /* Remove contract preview from summary */
 .contract-preview {
   display: none;
+}/* Booking.css - إضافة */
+
+/* View Contract Button */
+.view-contract-btn {
+  width: 100%;
+  padding: 12px;
+  background: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 10px 0;
+}
+
+.view-contract-btn:hover {
+  background: #F57C00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+}
+
+/* Driver Badge */
+.booking-driver-info {
+  margin: 8px 0;
+}
+
+.driver-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.driver-badge.with-driver {
+  background: #4CAF5020;
+  color: #4CAF50;
+  border: 1px solid #4CAF50;
+}
+
+.driver-badge.without-driver {
+  background: #88888820;
+  color: #888;
+  border: 1px solid #888;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .driver-badge.with-driver {
+  background: #4CAF5030;
+  color: #66BB6A;
+}
+
+[data-theme="dark"] .driver-badge.without-driver {
+  background: #66666630;
+  color: #999;
 }

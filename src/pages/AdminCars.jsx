@@ -18,6 +18,29 @@ function AdminCars() {
   const [carType, setCarType] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [description, setDescription] = useState('');
+  const [showAvailability, setShowAvailability] = useState(false);
+
+  // 🔥 package_prices للباقات
+  const packageKeys = ['0-1', '2-3', '4-6', '7-13', '14-20', '21-60', '61-356'];
+  const packageLabels = {
+    '0-1': '0-1 days',
+    '2-3': '2-3 days',
+    '4-6': '4-6 days',
+    '7-13': '7-13 days',
+    '14-20': '14-20 days',
+    '21-60': '21-60 days',
+    '61-356': '61-356 days',
+  };
+
+  const [packagePrices, setPackagePrices] = useState({
+    '0-1': { without_driver: '', with_driver: '' },
+    '2-3': { without_driver: '', with_driver: '' },
+    '4-6': { without_driver: '', with_driver: '' },
+    '7-13': { without_driver: '', with_driver: '' },
+    '14-20': { without_driver: '', with_driver: '' },
+    '21-60': { without_driver: '', with_driver: '' },
+    '61-356': { without_driver: '', with_driver: '' },
+  });
 
   const [imageFile, setImageFile] = useState(null);
   const [currentImageUrl, setCurrentImageUrl] = useState('');
@@ -79,10 +102,20 @@ function AdminCars() {
     setCarType('');
     setQuantity(1);
     setDescription('');
+    setShowAvailability(false);
     setImageFile(null);
     setCurrentImageUrl('');
     setEditingId(null);
     setMessage('');
+    setPackagePrices({
+      '0-1': { without_driver: '', with_driver: '' },
+      '2-3': { without_driver: '', with_driver: '' },
+      '4-6': { without_driver: '', with_driver: '' },
+      '7-13': { without_driver: '', with_driver: '' },
+      '14-20': { without_driver: '', with_driver: '' },
+      '21-60': { without_driver: '', with_driver: '' },
+      '61-356': { without_driver: '', with_driver: '' },
+    });
 
     const fileInput = document.getElementById('car-image-input');
     if (fileInput) {
@@ -131,6 +164,15 @@ function AdminCars() {
         imageUrl = await uploadImage();
       }
 
+      // 🔥 بناء package_prices
+      const packagePricesJson = {};
+      packageKeys.forEach(key => {
+        packagePricesJson[key] = {
+          without_driver: Number(packagePrices[key]?.without_driver) || 0,
+          with_driver: Number(packagePrices[key]?.with_driver) || 0,
+        };
+      });
+
       const carData = {
         brand: brand.trim(),
         model: model.trim(),
@@ -142,6 +184,8 @@ function AdminCars() {
         quantity: Number(quantity),
         description: description.trim(),
         image_url: imageUrl,
+        show_availability: showAvailability,
+        package_prices: packagePricesJson,
       };
 
       if (editingId) {
@@ -182,8 +226,33 @@ function AdminCars() {
     setQuantity(car.quantity ?? 1);
     setDescription(car.description || '');
     setCurrentImageUrl(car.image_url || '');
+    setShowAvailability(car.show_availability || false);
     setImageFile(null);
     setMessage('');
+
+    // 🔥 تحميل package_prices
+    if (car.package_prices) {
+      const newPackagePrices = { ...packagePrices };
+      packageKeys.forEach(key => {
+        if (car.package_prices[key]) {
+          newPackagePrices[key] = {
+            without_driver: car.package_prices[key]?.without_driver || '',
+            with_driver: car.package_prices[key]?.with_driver || '',
+          };
+        }
+      });
+      setPackagePrices(newPackagePrices);
+    } else {
+      setPackagePrices({
+        '0-1': { without_driver: '', with_driver: '' },
+        '2-3': { without_driver: '', with_driver: '' },
+        '4-6': { without_driver: '', with_driver: '' },
+        '7-13': { without_driver: '', with_driver: '' },
+        '14-20': { without_driver: '', with_driver: '' },
+        '21-60': { without_driver: '', with_driver: '' },
+        '61-356': { without_driver: '', with_driver: '' },
+      });
+    }
 
     const fileInput = document.getElementById('car-image-input');
     if (fileInput) {
@@ -207,6 +276,16 @@ function AdminCars() {
     if (editingId === id) resetForm();
     showMessage('Car deleted successfully.');
     await loadCars();
+  };
+
+  const updatePackagePrice = (key, type, value) => {
+    setPackagePrices(prev => ({
+      ...prev,
+      [key]: {
+        ...prev[key],
+        [type]: value,
+      },
+    }));
   };
 
   return (
@@ -297,6 +376,36 @@ function AdminCars() {
             required
           />
 
+          {/* 🔥 Package Prices Section */}
+          <div className="package-prices-section">
+            <h3>Package Prices (Per Day)</h3>
+            <div className="package-prices-grid">
+              {packageKeys.map((key) => (
+                <div key={key} className="package-price-group">
+                  <label className="package-label">{packageLabels[key]}</label>
+                  <div className="package-inputs">
+                    <input
+                      type="number"
+                      placeholder="Without Driver"
+                      min="0"
+                      step="0.01"
+                      value={packagePrices[key]?.without_driver || ''}
+                      onChange={(e) => updatePackagePrice(key, 'without_driver', e.target.value)}
+                    />
+                    <input
+                      type="number"
+                      placeholder="With Driver"
+                      min="0"
+                      step="0.01"
+                      value={packagePrices[key]?.with_driver || ''}
+                      onChange={(e) => updatePackagePrice(key, 'with_driver', e.target.value)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="file-input-wrapper">
             <label>Car Image</label>
             <input
@@ -327,6 +436,17 @@ function AdminCars() {
             onChange={(e) => setDescription(e.target.value)}
             rows="3"
           />
+
+          <div className="form-checkbox">
+            <label>
+              <input
+                type="checkbox"
+                checked={showAvailability}
+                onChange={(e) => setShowAvailability(e.target.checked)}
+              />
+              Show Availability to Customers
+            </label>
+          </div>
 
           <button type="submit" disabled={saving}>
             {saving ? '⏳ Saving...' : editingId ? '✅ Update Car' : '➕ Add Car'}
@@ -391,6 +511,21 @@ function AdminCars() {
                   <p className="price"><strong>Price:</strong> {car.price_per_day} EGP/day</p>
                   <p className="driver-price"><strong>Driver:</strong> {car.driver_price_per_day ?? '0'} EGP/day</p>
                   <p><strong>Qty:</strong> {car.quantity}</p>
+                  {car.package_prices && (
+                    <details className="package-details">
+                      <summary>Package Prices</summary>
+                      <div className="package-preview">
+                        {packageKeys.map(key => (
+                          <div key={key} className="package-preview-item">
+                            <span>{packageLabels[key]}:</span>
+                            <span>
+                              {car.package_prices[key]?.without_driver || 0} / {car.package_prices[key]?.with_driver || 0} EGP
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
                 </div>
 
                 <div className="admin-car-actions">

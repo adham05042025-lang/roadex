@@ -1,3 +1,4 @@
+// Cars.jsx - عرض سعر اليوم من باقة 61-356
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import './Cars.css';
@@ -33,46 +34,35 @@ function Cars() {
     setLoading(false);
   };
 
-  const categories = [
-    'All',
-    'City Car',
-    'Family Car',
-    'Luxury',
-    'Van',
-    '4x4',
-  ];
+  // ✅ جلب سعر اليوم من باقة 61-356
+  const getDisplayPrice = (car) => {
+    if (!car) return 0;
+    
+    const price = car.package_prices?.['61-356']?.['without_driver'];
+    if (price && price > 0) {
+      return price;
+    }
+    
+    return Number(car.price_per_day) || 0;
+  };
 
-  const carTypes = [
-    'All',
-    'Economy',
-    'Sedan',
-    'SUV',
-    'Van',
-    '4x4',
-  ];
+  const categories = ['All', 'City Car', 'Family Car', 'Luxury', 'Van', '4x4'];
+  const carTypes = ['All', 'Economy', 'Sedan', 'SUV', 'Van', '4x4'];
 
   const filteredCars = cars.filter((car) => {
-    const categoryMatch =
-      selectedCategory === 'All' ||
-      car.category === selectedCategory;
-
-    const typeMatch =
-      selectedType === 'All' ||
-      car.car_type === selectedType;
-
+    const categoryMatch = selectedCategory === 'All' || car.category === selectedCategory;
+    const typeMatch = selectedType === 'All' || car.car_type === selectedType;
     return categoryMatch && typeMatch;
   });
 
   return (
     <div className="cars-page">
 
-      {/* Header */}
       <div className="cars-header">
         <h1>Our Vehicles</h1>
         <p>Choose the perfect car for your journey</p>
       </div>
 
-      {/* Categories */}
       <div className="cars-filter-section">
         <h3>Categories</h3>
         <div className="cars-filters">
@@ -92,7 +82,6 @@ function Cars() {
         </div>
       </div>
 
-      {/* Car Types */}
       <div className="cars-filter-section">
         <h3>Car Type</h3>
         <div className="cars-filters">
@@ -109,26 +98,18 @@ function Cars() {
         </div>
       </div>
 
-      {/* Cars */}
       <div className="cars-grid">
-
         {loading && <p>Loading cars...</p>}
-
         {!loading && message && <p>{message}</p>}
-
-        {!loading && !message && filteredCars.length === 0 && (
-          <p>No cars found.</p>
-        )}
+        {!loading && !message && filteredCars.length === 0 && <p>No cars found.</p>}
 
         {!loading &&
           filteredCars.map((car) => {
-            // 🔥 السعر المعروض (بدون سائق)
-            const displayPrice = Number(car.price_per_day);
+            // 🔥 السعر من باقة 61-356 (بدون سائق)
+            const displayPrice = getDisplayPrice(car);
 
             return (
               <div className="car-card" key={car.id}>
-
-                {/* Car Image */}
                 {car.image_url && (
                   <img
                     src={car.image_url}
@@ -141,20 +122,16 @@ function Cars() {
                 )}
 
                 <div className="car-card-content">
-
-                  {/* Car Name & Year */}
                   <div className="car-card-title">
                     <h2>{car.brand} {car.model}</h2>
                     <span>{car.year}</span>
                   </div>
 
-                  {/* Category & Type */}
                   <div className="car-card-tags">
                     {car.category && <span>{car.category}</span>}
                     {car.car_type && <span>{car.car_type}</span>}
                   </div>
 
-                  {/* 🔥 Price (بدون سائق) */}
                   <div className="car-prices">
                     <div>
                       <span>Price Per Day</span>
@@ -162,29 +139,20 @@ function Cars() {
                         {displayPrice.toLocaleString()} EGP
                         <small>/day</small>
                         <small style={{ color: '#888', fontSize: '10px', display: 'block' }}>
-                          (Car only)
+                          (Long term rate)
                         </small>
                       </strong>
                     </div>
                   </div>
 
-                  {/* Available Quantity */}
-                  <div className="car-quantity">
-                    Available: {car.quantity}
-                  </div>
-
-                  {/* Car Details Button */}
                   <a href={`/car/${car.id}`} className="car-button">
                     Car Details
                   </a>
-
                 </div>
               </div>
             );
           })}
-
       </div>
-
     </div>
   );
 }

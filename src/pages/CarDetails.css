@@ -21,6 +21,20 @@
   align-items: start;
 }
 
+/* ===== Left Column ===== */
+.car-details-left {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== Right Column ===== */
+.car-details-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 /* ===== Image Area ===== */
 .car-details-image-area {
   position: relative;
@@ -57,12 +71,13 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   opacity: 0;
   transition: opacity 0.3s ease;
   color: #fff;
   font-size: 14px;
   font-weight: 600;
+  backdrop-filter: blur(4px);
 }
 
 .car-image-button:hover .car-zoom-overlay {
@@ -86,23 +101,371 @@
   transition: all 0.4s ease;
 }
 
-/* ===== Content ===== */
-.car-details-content {
+/* ============================================ */
+/* ===== DRIVER TOGGLE - GOLD STYLE ===== */
+/* ============================================ */
+
+.driver-toggle-section {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
-.car-details-content h1 {
-  font-size: clamp(32px, 4vw, 48px);
+.driver-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.driver-toggle-label .label-text {
+  transition: all 0.3s ease;
+}
+
+.driver-toggle-label .label-text.active {
+  color: #d4af37;
+  font-weight: 700;
+}
+
+.driver-toggle-label .label-text .gold-star {
+  color: #d4af37;
+  margin-right: 4px;
+}
+
+/* Toggle Switch */
+.driver-toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.driver-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.driver-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-input);
+  transition: 0.3s;
+  border-radius: 34px;
+  border: 1px solid var(--border-color);
+}
+
+.driver-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* Active - Gold */
+.driver-toggle-switch input:checked + .driver-toggle-slider {
+  background: #d4af37 !important;
+  border-color: #d4af37 !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.driver-toggle-switch input:checked + .driver-toggle-slider:before {
+  transform: translateX(22px);
+}
+
+/* Price Info */
+.driver-price-info {
+  margin-left: auto;
+  text-align: right;
+}
+
+.driver-price-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.driver-price-text .status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.driver-price-text .status.active {
+  color: #d4af37;
+  font-weight: 600;
+}
+
+.driver-price-text .status.inactive {
+  color: var(--text-secondary);
+}
+
+.driver-price-text small {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] .driver-toggle-switch input:checked + .driver-toggle-slider {
+  background: #d4af37 !important;
+  border-color: #d4af37 !important;
+}
+
+/* ============================================ */
+/* ===== PACKAGES SECTION ===== */
+/* ============================================ */
+
+.packages-section {
+  padding: 20px;
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  transition: all 0.4s ease;
+}
+
+.packages-section:hover {
+  border-color: #d4af37;
+}
+
+.packages-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.packages-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Manual Toggle */
+.manual-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.manual-toggle-label:hover {
+  border-color: #d4af37;
+}
+
+.manual-toggle-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #d4af37;
+}
+
+/* Days Grid */
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.day-card {
+  padding: 12px 8px;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid var(--border-color);
+  background: var(--bg-primary);
+  position: relative;
+}
+
+.day-card:hover:not(.not-fit) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.day-card.active {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.1);
+}
+
+.day-card.not-fit {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #ff4444;
+  background: rgba(255, 68, 68, 0.03);
+}
+
+.day-card h4 {
+  margin: 0 0 4px 0;
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.day-price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #d4af37;
+  margin: 4px 0;
+}
+
+.day-card small {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+}
+
+.day-total {
+  font-size: 0.65rem;
+  color: #d4af37;
+  font-weight: 600;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--border-color);
+}
+
+/* Package Fit */
+.package-fit {
+  display: block;
+  font-size: 0.55rem;
+  margin-top: 3px;
+  font-weight: 700;
+}
+
+.package-fit.fit {
+  color: #4CAF50;
+}
+
+.package-fit.unfit {
+  color: #ff4444;
+}
+
+.selected-badge {
+  display: block;
+  font-size: 0.5rem;
+  color: #d4af37;
+  font-weight: 700;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+/* Auto Fit Message */
+.auto-fit-message {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  margin: 6px 0 12px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.auto-fit-message.fit {
+  background: rgba(76, 175, 80, 0.08);
+  color: #4CAF50;
+  border: 1px solid rgba(76, 175, 80, 0.15);
+}
+
+.auto-fit-message.changing {
+  background: rgba(212, 175, 55, 0.08);
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Manual Days Input */
+.manual-days-input {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--bg-input);
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.manual-days-input label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.manual-days-input input {
+  width: 70px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.manual-days-input input:focus {
+  outline: none;
+  border-color: #d4af37;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.manual-price-info {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ============================================ */
+/* ===== RIGHT COLUMN STYLES ===== */
+/* ============================================ */
+
+.car-details-right h1 {
+  font-size: clamp(28px, 3.5vw, 42px);
   font-weight: 800;
   letter-spacing: -1px;
   color: var(--text-primary);
-  transition: color 0.4s ease;
+  margin: 0;
 }
 
-.car-details-content h1 span {
-  background: var(--gold-gradient);
+.car-details-right h1 span {
+  background: linear-gradient(135deg, #d4af37, #e8c84a, #d4af37);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -110,230 +473,244 @@
 
 .car-details-year {
   color: var(--text-secondary);
-  font-size: 16px;
+  font-size: 15px;
   margin-top: -4px;
-  transition: color 0.4s ease;
 }
 
 .car-details-tags {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .car-details-tags span {
   background: var(--bg-card);
-  padding: 6px 16px;
+  padding: 4px 14px;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   border: 1px solid var(--border-color);
-  transition: all 0.4s ease;
+}
+
+/* Driver Note */
+.driver-note {
+  padding: 8px 14px;
+  background: rgba(212, 175, 55, 0.06);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  border-radius: 8px;
+  color: #d4af37;
+  font-size: 0.8rem;
 }
 
 /* ===== Prices ===== */
 .car-details-prices {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin: 8px 0;
+  gap: 12px;
 }
 
 .car-details-price-box {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 16px;
-  padding: 16px 20px;
+  border-radius: 12px;
+  padding: 14px 18px;
   transition: all 0.4s ease;
 }
 
 .car-details-price-box:hover {
-  border-color: var(--gold);
+  border-color: #d4af37;
 }
 
 .car-details-price-box span {
   display: block;
-  font-size: 12px;
+  font-size: 10px;
   color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  transition: color 0.4s ease;
 }
 
 .car-details-price-box strong {
-  font-size: 24px;
-  color: var(--gold-light);
+  font-size: 22px;
+  color: #d4af37;
   font-weight: 700;
 }
 
 .car-details-price-box strong small {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
   font-weight: 400;
-  transition: color 0.4s ease;
 }
 
 .car-details-price-box strong small:last-child {
   display: block;
-  font-size: 10px;
-  color: var(--text-muted);
+  font-size: 9px;
   margin-top: 2px;
 }
 
-/* ===== Quantity ===== */
+/* ===== Availability ===== */
 .car-details-quantity {
-  color: var(--text-secondary);
-  font-size: 15px;
-  padding: 8px 0;
-  transition: color 0.4s ease;
+  color: #4CAF50;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.car-details-quantity strong {
-  color: var(--text-primary);
-  transition: color 0.4s ease;
+.car-details-unavailable {
+  color: #ff4444;
+  font-weight: 600;
+  padding: 8px 14px;
+  background: rgba(255, 68, 68, 0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 68, 68, 0.15);
 }
 
 /* ===== Description ===== */
 .car-details-description {
   color: var(--text-secondary);
-  font-size: 15px;
-  line-height: 1.8;
-  padding: 12px 0;
+  font-size: 14px;
+  line-height: 1.7;
+  padding: 10px 0;
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
-  transition: all 0.4s ease;
 }
 
-/* ===== Booking Section ===== */
+/* ============================================ */
+/* ===== BOOKING DATE SECTION ===== */
+/* ============================================ */
+
 .booking-date-section {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 16px;
-  padding: 24px 28px;
-  margin-top: 8px;
+  padding: 20px 24px;
   transition: all 0.4s ease;
 }
 
 .booking-date-section:hover {
-  border-color: var(--gold);
+  border-color: #d4af37;
 }
 
 .booking-date-section h2 {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 16px;
-  transition: color 0.4s ease;
+  margin: 0 0 14px 0;
 }
 
 .booking-date-section label {
   display: block;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 12px;
-  transition: color 0.4s ease;
+  margin-bottom: 10px;
 }
 
 .booking-date-section input {
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-primary);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   transition: all 0.3s ease;
   box-sizing: border-box;
-  margin-top: 4px;
+  margin-top: 3px;
 }
 
 .booking-date-section input:focus {
-  border-color: var(--gold);
+  border-color: #d4af37;
   outline: none;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 
-/* ===== Check Availability Button ===== */
-.check-availability-button {
-  width: 100%;
-  padding: 12px;
-  background: transparent;
+/* Selected Dates Summary */
+.selected-dates-summary {
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border-radius: 8px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  margin: 10px 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 20px;
+}
+
+.selected-dates-summary p {
+  margin: 3px 0;
+  font-size: 0.8rem;
   color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-family: 'Montserrat', sans-serif;
-  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
 }
 
-.check-availability-button:hover:not(:disabled) {
-  border-color: var(--gold);
-  color: var(--gold-light);
+.selected-dates-summary p span {
+  color: var(--text-muted);
 }
 
-.check-availability-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.selected-dates-summary strong {
+  color: #d4af37;
 }
 
-/* ===== Availability Result ===== */
-.availability-result {
-  margin: 12px 0 8px;
-  padding: 12px 16px;
+/* Date Error */
+.date-error-message {
+  padding: 8px 14px;
+  background: rgba(255, 0, 0, 0.06);
+  border: 1px solid #ff4444;
   border-radius: 8px;
-  text-align: center;
-  background: rgba(0, 204, 68, 0.05);
-  border: 1px solid rgba(0, 204, 68, 0.15);
-  color: #00cc44;
-}
-
-.availability-result p strong {
-  font-size: 20px;
-}
-
-.availability-result p:last-child {
   color: #ff4444;
-  border-color: rgba(255, 68, 68, 0.15);
+  margin: 6px 0;
+  font-size: 0.8rem;
 }
 
-/* ===== Message ===== */
+/* Message */
 .car-details-message {
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 13px;
   text-align: center;
   background: rgba(255, 68, 68, 0.05);
   border: 1px solid #ff4444;
   color: #ff4444;
-  margin: 8px 0;
+  margin: 6px 0;
 }
 
 /* ===== Book Now Button ===== */
 .book-now-button {
   width: 100%;
   padding: 14px;
-  background: var(--gold-gradient);
+  background: linear-gradient(135deg, #d4af37, #e8c84a, #d4af37);
   border: none;
   border-radius: 8px;
   color: #111;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Montserrat', sans-serif;
-  margin-top: 8px;
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+  background-size: 200% 200%;
+  animation: goldShine 3s ease-in-out infinite;
 }
 
-.book-now-button:hover {
+@keyframes goldShine {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.book-now-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: var(--gold-glow);
-  opacity: 0.9;
+  box-shadow: 0 4px 30px rgba(212, 175, 55, 0.35);
+  opacity: 0.95;
+}
+
+.book-now-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  animation: none;
 }
 
 /* ============================================ */
@@ -369,6 +746,7 @@
   object-fit: contain;
   border-radius: 16px;
   display: block;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .image-modal-close {
@@ -378,16 +756,15 @@
   background: transparent;
   border: none;
   color: #fff;
-  font-size: 40px;
+  font-size: 36px;
   font-weight: 300;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Montserrat', sans-serif;
   padding: 4px 12px;
 }
 
 .image-modal-close:hover {
-  color: var(--gold-light);
+  color: #d4af37;
   transform: rotate(90deg);
 }
 
@@ -404,60 +781,20 @@
   .car-details-image {
     aspect-ratio: 16/9;
   }
-
-  .car-details-no-image {
-    aspect-ratio: 16/9;
-  }
 }
 
 @media (max-width: 768px) {
   .car-details-page {
-    padding: 20px 16px 60px;
+    padding: 16px 12px 50px;
   }
 
-  .car-details-content h1 {
-    font-size: 28px;
-  }
-
-  .car-details-prices {
-    grid-template-columns: 1fr;
-  }
-
-  .car-details-price-box strong {
-    font-size: 20px;
-  }
-
-  .booking-date-section {
-    padding: 18px 16px;
-  }
-
-  .booking-date-section input {
-    font-size: 14px;
-    padding: 10px 14px;
-  }
-
-  .image-modal-content {
-    max-width: 95vw;
-  }
-
-  .image-modal-close {
-    top: -44px;
-    font-size: 32px;
-  }
-}
-
-@media (max-width: 480px) {
-  .car-details-content h1 {
+  .car-details-right h1 {
     font-size: 24px;
   }
 
-  .car-details-tags span {
-    font-size: 12px;
-    padding: 4px 12px;
-  }
-
-  .car-details-price-box {
-    padding: 12px 16px;
+  .car-details-prices {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 
   .car-details-price-box strong {
@@ -465,107 +802,171 @@
   }
 
   .booking-date-section {
-    padding: 14px 12px;
+    padding: 14px 16px;
   }
 
-  .booking-date-section h2 {
-    font-size: 16px;
+  .packages-section {
+    padding: 14px;
   }
-}/* Driver Toggle Section */
-.driver-toggle-section {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 12px 0;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
-  margin: 10px 0;
-}
 
-.driver-toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-weight: 500;
-  color: var(--text-primary);
-}
+  .days-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px;
+  }
 
-.driver-toggle-switch {
-  position: relative;
-  width: 50px;
-  height: 26px;
-}
+  .day-card {
+    padding: 10px 6px;
+  }
 
-.driver-toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
+  .day-price {
+    font-size: 0.9rem;
+  }
 
-.driver-toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-  border-radius: 34px;
-}
+  .selected-dates-summary {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
 
-.driver-toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
-  border-radius: 50%;
-}
-
-.driver-toggle-switch input:checked + .driver-toggle-slider {
-  background-color: #2196F3;
-}
-
-.driver-toggle-switch input:checked + .driver-toggle-slider:before {
-  transform: translateX(24px);
-}
-
-.driver-price-info {
-  margin-left: auto;
-}
-
-.driver-price-text {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
-/* Dark/Light mode support */
-[data-theme="dark"] .driver-toggle-slider {
-  background-color: #555;
-}
-
-[data-theme="dark"] .driver-toggle-switch input:checked + .driver-toggle-slider {
-  background-color: #4CAF50;
-}
-
-[data-theme="light"] .driver-toggle-section {
-  border-color: #ddd;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
   .driver-toggle-section {
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
-  
+
   .driver-price-info {
     margin-left: 0;
     width: 100%;
+    text-align: left;
   }
+
+  .image-modal-close {
+    top: -44px;
+    font-size: 28px;
+  }
+
+  .packages-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .manual-toggle-label {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .car-details-right h1 {
+    font-size: 20px;
+  }
+
+  .car-details-tags span {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+
+  .car-details-price-box {
+    padding: 10px 14px;
+  }
+
+  .car-details-price-box strong {
+    font-size: 16px;
+  }
+
+  .booking-date-section {
+    padding: 12px;
+  }
+
+  .booking-date-section h2 {
+    font-size: 14px;
+  }
+
+  .days-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .day-card {
+    padding: 8px 4px;
+  }
+
+  .day-card h4 {
+    font-size: 0.65rem;
+  }
+
+  .day-price {
+    font-size: 0.8rem;
+  }
+
+  .day-total {
+    font-size: 0.55rem;
+  }
+
+  .manual-days-input label {
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+  }
+
+  .manual-days-input input {
+    width: 100%;
+  }
+
+  .selected-dates-summary p {
+    font-size: 0.7rem;
+  }
+}
+
+/* ============================================ */
+/* ===== DARK MODE SUPPORT ===== */
+/* ============================================ */
+
+[data-theme="dark"] .day-card {
+  background: #1a1a2e;
+  border-color: #2a2a3e;
+}
+
+[data-theme="dark"] .day-card.active {
+  border-color: #d4af37;
+  background: rgba(212, 175, 55, 0.08);
+}
+
+[data-theme="dark"] .packages-section {
+  background: #1a1a2e;
+}
+
+[data-theme="dark"] .selected-dates-summary {
+  background: #0d0d1a;
+}
+
+[data-theme="dark"] .manual-days-input {
+  background: #0d0d1a;
+}
+
+[data-theme="dark"] .booking-date-section input {
+  background: #0d0d1a;
+}
+
+[data-theme="dark"] .car-details-price-box {
+  background: #1a1a2e;
+}
+
+[data-theme="dark"] .car-details-tags span {
+  background: #1a1a2e;
+}
+
+[data-theme="dark"] .driver-toggle-slider {
+  background: #2a2a3e;
+  border-color: #3a3a4e;
+}
+
+[data-theme="light"] .day-card {
+  background: #f8f8f8;
+}
+
+[data-theme="light"] .day-card.active {
+  background: rgba(212, 175, 55, 0.06);
+}
+
+[data-theme="light"] .driver-toggle-slider {
+  background: #e8e8e8;
+  border-color: #ddd;
 }
