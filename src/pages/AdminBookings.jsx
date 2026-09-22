@@ -1,4 +1,4 @@
-// AdminBookings.jsx - مع إضافة سعر اليوم والخصم
+// AdminBookings.jsx - النسخة النهائية الكاملة
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabase';
 import { formatDate24 } from '../utils/formatDate';
@@ -371,6 +371,7 @@ function AdminBookings() {
           .replace(/\{\{customer_name\}\}/g, booking.customer?.full_name || 'N/A')
           .replace(/\{\{customer_phone\}\}/g, booking.customer?.phone || 'N/A')
           .replace(/\{\{national_id\}\}/g, booking.national_id || 'N/A')
+          .replace(/\{\{customer_id\}\}/g, booking.national_id || 'N/A')
           .replace(/\{\{car_model\}\}/g, `${booking.cars?.brand || 'N/A'} ${booking.cars?.model || 'N/A'}`)
           .replace(/\{\{plate_number\}\}/g, booking.plate_number || 'N/A')
           .replace(/\{\{pickup_location\}\}/g, 'Cairo')
@@ -473,13 +474,11 @@ function AdminBookings() {
       return;
     }
 
-    // 🔥 حساب عدد الأيام
     const pickup = new Date(editForm.pickup_at);
     const returnDate = new Date(editForm.return_at);
     const diffHours = Math.abs(returnDate - pickup) / (1000 * 60 * 60);
     const days = Math.ceil(diffHours / 24);
 
-    // 🔥 حساب السعر الجديد
     let total = 0;
     
     if (editForm.daily_price && Number(editForm.daily_price) > 0) {
@@ -489,12 +488,10 @@ function AdminBookings() {
       total = calculatedTotal > 0 ? calculatedTotal : Number(editForm.total_price) || 0;
     }
 
-    // 🔥 إضافة الرسوم
     total += Number(editForm.insurance_amount) || 0;
     total += Number(editForm.pickup_fee) || 0;
     total += Number(editForm.delivery_fee) || 0;
 
-    // 🔥 طرح الخصم
     const discountValue = Number(editForm.discount) || 0;
     total -= discountValue;
 
@@ -1166,7 +1163,6 @@ function AdminBookings() {
                 </select>
               </div>
 
-              {/* 🔥 Number of Days (Auto) */}
               <div className="modal-field">
                 <label>Number of Days (Auto)</label>
                 <input 
@@ -1183,7 +1179,6 @@ function AdminBookings() {
                 />
               </div>
 
-              {/* 🔥 Daily Price (Manual Override) */}
               <div className="modal-field">
                 <label>Daily Price (EGP) - Optional Override</label>
                 <input 
@@ -1198,7 +1193,6 @@ function AdminBookings() {
                 </small>
               </div>
 
-              {/* 🔥 Discount */}
               <div className="modal-field">
                 <label>Discount (EGP)</label>
                 <input 
