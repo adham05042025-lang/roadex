@@ -1,4 +1,4 @@
-// AdminBookings.jsx - النسخة النهائية الكاملة
+// AdminBookings.jsx - كامل مع حساب daily_rate الصحيح
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabase';
 import { formatDate24 } from '../utils/formatDate';
@@ -365,6 +365,16 @@ function AdminBookings() {
       }
 
       if (contractData && contractData.template_html) {
+        const days = calculateRentalDays(booking.pickup_at, booking.return_at);
+        
+        // 🔥 حساب السعر اليومي الصحيح (بدون الرسوم)
+        const basePrice = Number(booking.total_price || 0) 
+          - Number(booking.insurance_amount || 0) 
+          - Number(booking.pickup_fee || 0) 
+          - Number(booking.delivery_fee || 0);
+        
+        const dailyRate = days > 0 ? Math.round(basePrice / days) : 0;
+
         let contractHtml = contractData.template_html
           .replace(/\{\{contract_number\}\}/g, booking.booking_number || 'N/A')
           .replace(/\{\{signature_date\}\}/g, new Date().toLocaleDateString('en-US'))
@@ -377,7 +387,8 @@ function AdminBookings() {
           .replace(/\{\{pickup_location\}\}/g, 'Cairo')
           .replace(/\{\{pickup_at\}\}/g, formatDate24(booking.pickup_at))
           .replace(/\{\{return_at\}\}/g, formatDate24(booking.return_at))
-          .replace(/\{\{rental_days\}\}/g, calculateRentalDays(booking.pickup_at, booking.return_at))
+          .replace(/\{\{rental_days\}\}/g, days)
+          .replace(/\{\{daily_rate\}\}/g, dailyRate)
           .replace(/\{\{with_driver\}\}/g, booking.with_driver ? 'With Driver' : 'Without Driver')
           .replace(/\{\{total_price\}\}/g, booking.total_price || 0)
           .replace(/\{\{security_deposit\}\}/g, booking.deposit_paid || 0)
