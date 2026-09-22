@@ -1,4 +1,4 @@
-// AdminBookings.jsx - النسخة الأصلية الكاملة
+// AdminBookings.jsx - مع إضافة سعر اليوم والخصم
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../supabase';
 import { formatDate24 } from '../utils/formatDate';
@@ -34,6 +34,8 @@ function AdminBookings() {
     insurance_amount: '',
     pickup_fee: '',
     delivery_fee: '',
+    daily_price: '',
+    discount: '',
   });
 
   const [showExtensionModal, setShowExtensionModal] = useState(false);
@@ -423,6 +425,8 @@ function AdminBookings() {
       insurance_amount: booking.insurance_amount || '',
       pickup_fee: booking.pickup_fee || '',
       delivery_fee: booking.delivery_fee || '',
+      daily_price: '',
+      discount: '',
     });
     setShowEditModal(true);
   };
@@ -447,6 +451,8 @@ function AdminBookings() {
       insurance_amount: '',
       pickup_fee: '',
       delivery_fee: '',
+      daily_price: '',
+      discount: '',
     });
   };
 
@@ -454,18 +460,46 @@ function AdminBookings() {
     if (!editingBooking) return;
     setMessage('');
     setUpdatingId(editingBooking.id);
+    
     if (new Date(editForm.return_at) <= new Date(editForm.pickup_at)) {
       setMessage('Return time must be after pickup time.');
       setUpdatingId('');
       return;
     }
+    
     if (!editForm.car_id) {
       setMessage('Please select a car.');
       setUpdatingId('');
       return;
     }
-    const calculatedTotal = calculateTotalPrice(editForm.car_id, editForm.pickup_at, editForm.return_at);
-    const total = calculatedTotal > 0 ? calculatedTotal : Number(editForm.total_price) || 0;
+
+    // 🔥 حساب عدد الأيام
+    const pickup = new Date(editForm.pickup_at);
+    const returnDate = new Date(editForm.return_at);
+    const diffHours = Math.abs(returnDate - pickup) / (1000 * 60 * 60);
+    const days = Math.ceil(diffHours / 24);
+
+    // 🔥 حساب السعر الجديد
+    let total = 0;
+    
+    if (editForm.daily_price && Number(editForm.daily_price) > 0) {
+      total = Number(editForm.daily_price) * days;
+    } else {
+      const calculatedTotal = calculateTotalPrice(editForm.car_id, editForm.pickup_at, editForm.return_at);
+      total = calculatedTotal > 0 ? calculatedTotal : Number(editForm.total_price) || 0;
+    }
+
+    // 🔥 إضافة الرسوم
+    total += Number(editForm.insurance_amount) || 0;
+    total += Number(editForm.pickup_fee) || 0;
+    total += Number(editForm.delivery_fee) || 0;
+
+    // 🔥 طرح الخصم
+    const discountValue = Number(editForm.discount) || 0;
+    total -= discountValue;
+
+    if (total < 0) total = 0;
+
     const deposit = Number(editForm.deposit_paid) || 0;
     const remaining = total - deposit;
     
@@ -490,11 +524,13 @@ function AdminBookings() {
         delivery_fee: Number(editForm.delivery_fee) || 0,
       })
       .eq('id', editingBooking.id);
+      
     if (error) {
       setMessage(error.message);
       setUpdatingId('');
       return;
     }
+    
     setMessage('Booking updated successfully!');
     closeEditModal();
     await loadBookings();
@@ -1129,6 +1165,54 @@ function AdminBookings() {
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>
+
+              {/* 🔥 Number of Days (Auto) */}
+              <div className="modal-field">
+                <label>Number of Days (Auto)</label>
+                <input 
+                  type="text" 
+                  value={(() => {
+                    if (!editForm.pickup_at || !editForm.return_at) return '0';
+                    const pickup = new Date(editForm.pickup_at);
+                    const returnDate = new Date(editForm.return_at);
+                    const diffHours = Math.abs(returnDate - pickup) / (1000 * 60 * 60);
+                    return Math.ceil(diffHours / 24);
+                  })()}
+                  disabled 
+                  style={{ opacity: 0.7, background: '#0d0d0d' }}
+                />
+              </div>
+
+              {/* 🔥 Daily Price (Manual Override) */}
+              <div className="modal-field">
+                <label>Daily Price (EGP) - Optional Override</label>
+                <input 
+                  type="number" 
+                  placeholder="Enter daily price to override (e.g., 1800)" 
+                  value={editForm.daily_price} 
+                  onChange={(e) => setEditForm({ ...editForm, daily_price: e.target.value })} 
+                  min="0"
+                />
+                <small style={{ color: '#888', fontSize: '11px' }}>
+                  Leave empty to use auto-calculated price
+                </small>
+              </div>
+
+              {/* 🔥 Discount */}
+              <div className="modal-field">
+                <label>Discount (EGP)</label>
+                <input 
+                  type="number" 
+                  placeholder="Enter discount amount" 
+                  value={editForm.discount} 
+                  onChange={(e) => setEditForm({ ...editForm, discount: e.target.value })} 
+                  min="0"
+                />
+                <small style={{ color: '#888', fontSize: '11px' }}>
+                  Amount will be subtracted from total
+                </small>
+              </div>
+
               <div className="modal-field">
                 <label>Total Price (EGP)</label>
                 <input type="number" placeholder="Enter total price" value={editForm.total_price} onChange={(e) => {
@@ -1140,7 +1224,9 @@ function AdminBookings() {
                     remaining_balance: (Number(val) || 0) - deposit
                   });
                 }} />
-                <small style={{ color: '#888', fontSize: '11px' }}>Price will be auto-calculated based on 12h/day</small>
+                <small style={{ color: '#888', fontSize: '11px' }}>
+                  Will be auto-calculated: (Daily Price × Days) + Fees - Discount
+                </small>
               </div>
               {message && <div className="modal-message">{message}</div>}
             </div>
